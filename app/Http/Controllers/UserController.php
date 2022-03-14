@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
@@ -11,7 +13,22 @@ class UserController extends Controller
     public function index()
     {
         return response()->json(
-            User::with('roles')->get()
+            User::with('roles')->orderByDesc('created_at')->get()
+        );
+    }
+
+    public function show(User $user)
+    {
+        $user = User::with('roles')->find($user->id);
+        return response()->json(
+            $user
+        );
+    }
+
+    public function getRoles()
+    {
+        return response()->json(
+            Role::get()
         );
     }
 
@@ -21,7 +38,7 @@ class UserController extends Controller
             'name' => 'required',
             'email' => 'required | unique:users',
             'password' => 'required',
-            'role' => 'required',
+            'role_id' => 'required',
         ]);
 
         $user = new User();
@@ -39,7 +56,7 @@ class UserController extends Controller
     {
         $data = $request->validate([
             'name' => 'required',
-            'email' => 'required | unique:users',
+            'email' => ["required", Rule::unique('users')->ignore($user->email, 'email')],
             'password' => 'nullable',
             'role' => 'required',
         ]);
