@@ -25,8 +25,8 @@ class StudentFactory extends Factory
             'cellphone' => '989898988',
             'observation' => $this->faker->sentence(4),
             'course_id' => 2,
+            'course_turn_id' => 2,
             'registered_by' => 1,
-            'registered_at' => \Carbon\Carbon::now(),
         ];
     }
 }

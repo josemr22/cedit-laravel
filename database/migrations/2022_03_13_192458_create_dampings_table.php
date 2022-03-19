@@ -16,9 +16,9 @@ class CreateDampingsTable extends Migration
         Schema::create('dampings', function (Blueprint $table) {
             $table->id();
             $table->string('amount');
-            $table->string('voucher')->nullable();
-            $table->string('type');
+            $table->string('voucher');
             $table->foreignId('transaction_id');
+            $table->foreignId('installment_id');
             $table->timestamps();
         });
     }

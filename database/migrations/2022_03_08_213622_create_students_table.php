@@ -22,15 +22,11 @@ class CreateStudentsTable extends Migration
             $table->string('address');
             $table->string('phone')->nullable();
             $table->string('cellphone');
+            $table->string('date_of_birth');
             $table->string('observation')->nullable();
-            $table->foreignId('course_id');
-            $table->foreignId('course_turn_id')->nullable();
-            $table->boolean('signed_up')->default(0);
             $table->foreignId('registered_by')->nullable();
-            $table->string('registered_at')->nullable();
-            $table->foreignId('enrolled_by')->nullable();
-            $table->string('enrolled_at')->nullable();
-            $table->string('start_date')->nullable();
+            $table->foreignId('course_id');
+            $table->foreignId('course_turn_id');
             $table->timestamps();
         });
     }

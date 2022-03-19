@@ -16,6 +16,6 @@ class Payment extends Model
 
     public function quotes()
     {
-        return $this->hasMany(Fee::class);
+        return $this->hasMany(Installment::class);
     }
 }

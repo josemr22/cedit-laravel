@@ -31,9 +31,4 @@ class Student extends Model
     {
         return $this->belongsTo(User::class, 'registered_by');
     }
-
-    public function enrolled_by()
-    {
-        return $this->belongsTo(User::class, 'enrolled_by');
-    }
 }
