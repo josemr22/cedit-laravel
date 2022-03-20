@@ -268,6 +268,8 @@ class StudentController extends Controller
     public function show(Student $student)
     {
         //
+        $student = Student::with('department', 'registered_by', 'course_turn.turn', 'course')->findOrFail($student->id);
+        return response()->json($student);
     }
 
     public function showPayments(CourseTurnStudent $courseTurnStudent)
