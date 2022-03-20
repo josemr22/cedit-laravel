@@ -14,8 +14,13 @@ class Payment extends Model
         return $this->belongsTo(Transaction::class);
     }
 
-    public function quotes()
+    public function installments()
     {
         return $this->hasMany(Installment::class);
+    }
+
+    public function courseTurnStudent()
+    {
+        return $this->hasOne(CourseTurnStudent::class);
     }
 }

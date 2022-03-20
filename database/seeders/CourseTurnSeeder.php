@@ -15,7 +15,7 @@ class CourseTurnSeeder extends Seeder
     public function run()
     {
         //
-        for ($i = 1; $i < 5; $i++) {
+        for ($i = 1; $i < 6; $i++) {
             CourseTurn::create([
                 "course_id" => $i,
                 "turn_id" => 1,

@@ -15,7 +15,7 @@ class CreateInstallmentsTable extends Migration
     {
         Schema::create('installments', function (Blueprint $table) {
             $table->id();
-            $table->float('number')->nullable();
+            $table->string('number')->nullable();
             $table->string('type');
             $table->float('amount')->default(0);
             $table->float('balance')->default(0);

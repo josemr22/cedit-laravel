@@ -23,6 +23,7 @@ class StudentFactory extends Factory
             'address' => $this->faker->sentence(2),
             'phone' => '23232323',
             'cellphone' => '989898988',
+            'date_of_birth' => \Carbon\Carbon::now()->subYear(18),
             'observation' => $this->faker->sentence(4),
             'course_id' => 2,
             'course_turn_id' => 2,

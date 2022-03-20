@@ -3,232 +3,259 @@
 namespace App\Http\Controllers;
 
 use App\Models\Fee;
+use App\Models\Bank;
 use App\Models\Damping;
 use App\Models\Payment;
 use App\Models\Student;
+use App\Models\CourseTurn;
 use App\Models\Department;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
+use App\Models\CourseTurnStudent;
+use App\Models\Installment;
 
 class StudentController extends Controller
 {
+    // Informes
     public function index()
     {
         //
-        $students = Student::where('signed_up', 1)->with('department', 'enrolled_by', 'course_turn.turn', 'course')
-            ->when(request('course_id'), function ($query, $course_id) {
-                $query->where('course_id', $course_id);
+        $informs = Student::with('department', 'registered_by', 'course_turn.turn', 'course')->orderByDesc('created_at')->get();
+        return response()->json($informs);
+    }
+
+    private function createStudent($request)
+    {
+        $data = $request->validate([
+            'name' => 'required',
+            'dni' => 'required',
+            'email' => 'required',
+            'department_id' => 'required',
+            'address' => 'required',
+            'phone' => 'nullable',
+            'cellphone' => 'required',
+            'date_of_birth' => 'required',
+            'observation' => 'nullable',
+            'course_id' => 'required',
+            'course_turn_id' => 'required',
+            'registered_by' => 'required',
+        ]);
+
+        $data['date_of_birth'] = new \Carbon\Carbon($data['date_of_birth']);
+
+        return Student::create($data);
+    }
+
+    private function updateStudent($id, $request)
+    {
+        $data = $request->validate([
+            'name' => 'required',
+            'dni' => 'required',
+            'email' => 'required',
+            'department_id' => 'required',
+            'address' => 'required',
+            'phone' => 'nullable',
+            'cellphone' => 'required',
+            'date_of_birth' => 'required',
+            'observation' => 'nullable',
+        ]);
+
+        $student = Student::findOrFail($id);
+
+        $student->update($data);
+
+        return $student;
+    }
+
+    private function createTransaction($transactionForm)
+    {
+        $transaction = new Transaction();
+        $transaction->user_id = $transactionForm['user_id'];
+        $transaction->bank_id = $transactionForm['bank_id'];
+        //TODO: When operation is mandatory?
+        $bank = Bank::findOrFail($transactionForm['bank_id']);
+        if ($bank->id != 1) {
+            $transaction->operation = $transactionForm['operation'];
+        }
+        if ($bank->name == 'YAPE') {
+            $transaction->name = $transactionForm['name'];
+            $transaction->payment_date = new \Carbon\Carbon($transactionForm['payment_date']);
+        }
+        $transaction->save();
+        return $transaction;
+    }
+
+    public function store(Request $request)
+    {
+        //
+        $student = $this->createStudent($request);
+        return response()->json($student);
+    }
+
+    public function updateStudentAndCourseTurn(CourseTurnStudent $courseTurnStudent, Request $request)
+    {
+        //
+        $student = $this->updateStudent($courseTurnStudent->student->id, $request);
+
+        $courseData = $request->validate([
+            'course_turn_id' => 'required',
+            'start_date' => 'required',
+        ]);
+
+        $courseTurnStudent->course_turn_id = $courseData['course_turn_id'];
+        $courseTurnStudent->start_date =  new \Carbon\Carbon($courseData['start_date']);
+        $courseTurnStudent->save();
+
+        $studentWithCourse = CourseTurnStudent::with('courseTurn.course', 'courseTurn.turn', 'student.department', 'matriculator')
+            ->findOrFail($courseTurnStudent->id);
+
+        return response()->json($studentWithCourse);
+    }
+
+    public function getStudentsWithCourse()
+    {
+        //
+        $courseTurnsIds = CourseTurn::when(request('course_id'), function ($query, $course_id) {
+            $query->where('course_id', $course_id);
+        })
+            ->get()
+            ->map(function ($courseTurn) {
+                return $courseTurn->id;
+            })
+            ->toArray();
+
+        $studentsWithCourse = CourseTurnStudent::with('courseTurn.course', 'courseTurn.turn', 'student.department', 'matriculator')
+            ->when(request('start_date'), function ($query, $start_date) {
+                $query->whereDate('start_date', $start_date);
             })
             ->when(request('anio'), function ($query, $anio) {
-                $query->whereYear('enrolled_at', $anio);
+                $query->whereYear('created_at', $anio);
             })
-            ->when(request('start_date'), function ($query, $start_date) {
-                $query->whereYear('start_date', $start_date);
-            })
-            ->orderByDesc('enrolled_at')->get();
-        return response()->json($students);
+            ->whereIn('course_turn_id', $courseTurnsIds)
+            ->get();
+
+        return response()->json($studentsWithCourse);
+
+        // $students = Student::with('department', 'coursesGroup.course', 'coursesGroup.turn')
+        //     ->whereIn('id', $studentIds)
+        //     ->orderByDesc('created_at')->get();
+        // return response()->json($students);
     }
 
     public function filter()
     {
         //
-        $query = request('query');
-        $students = Student::where('signed_up', 1)
-            ->where('name', 'like', "%$query%")
-            // ->orWhere('dni', 'like', "%{$request->query}%")
-            // ->with('department', 'enrolled_by', 'course_turn.turn', 'course')
-            ->orderByDesc('name')
-            ->take(10)
+        $term = request('query');
+
+        $studentsWithCourse = CourseTurnStudent::with('courseTurn.course', 'courseTurn.turn', 'student.department', 'matriculator')
+            ->whereHas('student', function ($query) use ($term) {
+                $query->where('name', 'like', "%$term%")
+                    ->orWhere('dni', 'like', "%{$term}%");
+            })
             ->get();
-        return response()->json($students);
+
+        return response()->json($studentsWithCourse);
     }
 
-    public function indexInforms()
+    public function showStudentWithCourse($id)
     {
-        //
-        $informs = Student::where('signed_up', 0)->with('department', 'registered_by')->orderByDesc('registered_at')->get();
-        return response()->json($informs);
+        $studentsWithCourse = CourseTurnStudent::with('courseTurn.course', 'courseTurn.turn', 'student.department', 'matriculator')
+            ->findOrFail($id);
+
+        return response()->json($studentsWithCourse);
     }
 
-    public function enroll(Student $student, Request $request)
+
+    public function enroll(Request $request)
     {
         //
-        $data = $request->validate([
-            'name' => 'required',
-            'dni' => 'required',
-            'email' => 'required',
-            'department_id' => 'required',
-            'address' => 'required',
-            'phone' => 'required',
-            'cellphone' => 'required',
-            'observation' => 'required',
-            'course_id' => 'required',
+        if (!$request->input('student_id')) {
+            $student = $this->createStudent($request);
+        } else {
+            $student = $this->updateStudent($request->input('student_id'), $request);
+        }
+
+        $courseTurnStudentData = $request->validate([
             'course_turn_id' => 'required',
             'start_date' => 'required',
-            'enrolled_by' => 'required',
+            'enrolled_by' => 'required'
         ]);
 
-        $data['enrolled_at'] = \Carbon\Carbon::now();
-        $data['start_date'] = new \Carbon\Carbon($data['start_date']);
-        $data['signed_up'] = 1;
+        $courseTurnStudentData['start_date'] = new \Carbon\Carbon($courseTurnStudentData['start_date']);
 
-        $student->update($data);
+        //Create Transaction
+        $transactionForm = $request->input("transaction");
+
+        $transaction = $this->createTransaction($transactionForm);
 
         //Payment
-        $payment = new Payment();
         $paymentForm = $request->input('payment');
 
+        $payment = new Payment();
         $payment->type = $paymentForm['type'];
         $payment->observation = $paymentForm['observation'];
-        $payment->student_id = $student->id;
         $payment->amount = $paymentForm['amount'];
-        $payment->save();
         if ($payment->type) {
 
-            $payment->amount_payable = $paymentForm['amount_payable'];
-            $payment->save();
-
-            $cuotas = $paymentForm['cuotas'];
-            foreach ($cuotas as $item) {
-                $cuota = new Fee();
-                $cuota->amount = $item['amount'];
-                $cuota->balance = $item['balance'];
-                $cuota->payment_id = $payment->id;
-                $payment->save();
-            }
-        }
-        $transactionForm = $request->input("transaction");
-        $transaction = new Transaction();
-        $transaction->bank_id = $transactionForm['bank_id'];
-        $transaction->operation = $transactionForm['operation'];
-        $transaction->save();
-        $payment->transaction_id = $transaction->id;
-
-        return response()->json($student);
-    }
-
-    public function store(Request $request)
-    {
-        $data = $request->validate([
-            'name' => 'required',
-            'dni' => 'required',
-            'email' => 'required',
-            'department_id' => 'required',
-            'address' => 'required',
-            'phone' => 'nullable',
-            'cellphone' => 'required',
-            'observation' => 'nullable',
-            'course_id' => 'required',
-            'course_turn_id' => 'required',
-            'start_date' => 'required',
-            'registered_by' => 'required',
-            'enrolled_by' => 'required',
-            // 'transaction' => 'required',
-            // 'payment' => 'required',
-        ]);
-
-        $paymentData = $request->payment;
-        $transactionData = $request->transaction;
-
-        $data['enrolled_at'] = \Carbon\Carbon::now();
-        $data['start_date'] = new \Carbon\Carbon($data['start_date']);
-        $data['signed_up'] = 1;
-
-        $student = Student::create($data);
-
-        //Payment
-        $payment = new Payment();
-
-        $payment->type = $paymentData['payment_type'];
-        $payment->observation = $paymentData['observation'];
-        $payment->student_id = $student->id;
-        $payment->amount = $paymentData['amount'];
-        $payment->save();
-
-        //if cash
-        if ($payment->type == '1') {
-            //TODO: CHANGE DEFAULT
-            $payment->cash_voucher = 'ABCD1234';
-            //createTransaction
-
-            $transaction = new Transaction();
-            $transaction->bank_id = $transactionData['bank_id'];
-            $transaction->operation = $transactionData['operation'];
-            $transaction->save();
             $payment->transaction_id = $transaction->id;
+            $payment->voucher = "ABCDEFGH";
             $payment->save();
         } else {
-            //if credit
-            // $firstQuote->
+            $payment->save();
 
-            $transaction = new Transaction();
-            $transaction->bank_id = $transactionData['bank_id'];
-            $transaction->operation = $transactionData['operation'];
-            $transaction->save();
-
-            // Matricula
-            $damping = new Damping();
-            $damping->amount = $paymentData['amount_to_pay_enrollment'];
-            //TODO: changeDefault
-            $damping->voucher = "ABCD1234";
-            $damping->type = 'm';
-            $damping->transaction_id = $transaction->id;
-            $damping->save();
-
-
-            //Cuota1
-
+            //Datos de Matrícula
+            $installment = new Installment();
+            $installment->type = 'm';
+            $installment->amount = $paymentForm['enroll_amount'];
+            $installment->payment_id = $payment->id;
+            $installment->save();
 
             $damping = new Damping();
-            $damping->amount = $paymentData['quote1'];
-            //TODO: changeDefault
-            $damping->voucher = "ABCD1234";
-            $damping->type = 'c';
+            $damping->amount = $paymentForm['pay_enroll_amount'];
+            //TODO: CHANGE VOUCHER
+            $damping->voucher = 'ABCDEFG';
             $damping->transaction_id = $transaction->id;
+            $damping->installment_id = $installment->id;
             $damping->save();
+            $installment->balance = floatval($paymentForm['enroll_amount']) - floatval($paymentForm['pay_enroll_amount']);
+            $installment->save();
+            //=================
 
-            $firstQuote = new Fee();
-            $firstQuote->amount = $paymentData['quote1'];
-            $firstQuote->balance = $paymentData['quote1'] - $paymentData['pay_quote1'];
-            $firstQuote->late = 0;
-            // $firstQuote->observation = $paymentData[''];
-            $firstQuote->payment_id = $payment->id;
-            $firstQuote->save();
-
-            // $quotes = $paymentData['quotas'];
-            //TODO: recorrer cuotas
-
-            // foreach ($quotes as $item) {
-            //     $cuota = new Fee();
-            //     $cuota->amount = $item['amount'];
-            //     $cuota->balance = $item['balance'];
-            //     $cuota->payment_id = $payment->id;
-            //     $payment->save();
-            // }
+            $installments = $paymentForm['installments'];
+            $firstInstallment = true;
+            foreach ($installments as $index => $item) {
+                $installment = new Installment();
+                $installment->number = $index + 1;
+                $installment->type = 'c';
+                $installment->amount = $item['amount'];
+                $installment->payment_id = $payment->id;
+                $installment->save();
+                if ($firstInstallment) {
+                    $damping = new Damping();
+                    $damping->amount = $item['pay'];
+                    //TODO: CHANGE VOUCHER
+                    $damping->voucher = 'ABCDEFG';
+                    $damping->transaction_id = $transaction->id;
+                    $damping->installment_id = $installment->id;
+                    $damping->save();
+                    $installment->balance = floatval($item['amount']) - floatval($item['pay']);
+                } else {
+                    $installment->balance = $item['amount'];
+                }
+                $installment->save();
+                $firstInstallment = false;
+            }
         }
 
-        return response()->json($student);
-    }
+        //Enroll
+        $enroll = new CourseTurnStudent();
+        $enroll->student_id = $student->id;
+        $enroll->course_turn_id = $courseTurnStudentData['course_turn_id'];
+        $enroll->enrolled_by = $courseTurnStudentData['enrolled_by'];
+        $enroll->payment_id = $payment->id;
+        $enroll->start_date = new \Carbon\Carbon($courseTurnStudentData['start_date']);
+        $enroll->save();
 
-    public function storeInforms(Request $request)
-    {
-        //
-        $data = $request->validate([
-            'name' => 'required',
-            'dni' => 'required',
-            'email' => 'required',
-            'department_id' => 'required',
-            'address' => 'required',
-            'phone' => 'nullable',
-            'cellphone' => 'required',
-            'observation' => 'required',
-            'course_id' => 'required',
-            'registered_by' => 'required',
-        ]);
-
-        $data['registered_at'] = \Carbon\Carbon::now();
-
-        $student = Student::create($data);
         return response()->json($student);
     }
 
@@ -243,49 +270,47 @@ class StudentController extends Controller
         //
     }
 
-    public function showPayments(Student $student)
+    public function showPayments(CourseTurnStudent $courseTurnStudent)
     {
         //
-        $payment = Payment::where('student_id', $student->id)->with('transaction')->with('quotes')->firstOrFail();
+        $payment = Payment::with('installments.dampings.transaction.bank', 'installments.dampings.transaction.responsable', 'courseTurnStudent.student', 'courseTurnStudent.courseTurn.course', 'courseTurnStudent.courseTurn.turn')
+            ->findOrFail($courseTurnStudent->payment->id);
         return response()->json($payment);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\Student  $student
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(Student $student)
+    public function payInstallment(Installment $installment, Request $request)
     {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Student  $student
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, Student $student)
-    {
-        //
         $data = $request->validate([
-            'name' => 'required',
-            'dni' => 'required',
-            'email' => 'required',
-            'department_id' => 'required',
-            'address' => 'required',
-            'phone' => 'nullable',
-            'cellphone' => 'required',
-            'course_id' => 'required',
-            'course_turn_id' => 'required',
-            'start_date' => 'required',
+            'amount' => 'required',
         ]);
 
-        $student->update($data);
-        return response()->json($student);
+        $transactionForm = $request->input('transaction');
+
+        $transaction = $this->createTransaction($transactionForm);
+
+        $damping = new Damping();
+        $damping->amount = $data['amount'];
+        //TODO: Change voucher
+        $damping->voucher = 'ABCDEFG';
+        $damping->transaction_id = $transaction->id;
+        $damping->installment_id = $installment->id;
+        $damping->save();
+
+        $installment->balance = floatval($installment->balance) - floatval($data['amount']);
+        if ($installment->balance < 0) {
+            $installment->balance = 0;
+        }
+        $installment->save();
+    }
+
+    public function getByOperation($operation, $bank_id)
+    {
+        $transaction = Transaction::with('bank', 'payment.courseTurnStudent.student', 'damping.installment.payment.courseTurnStudent.student', 'responsable')
+            ->where('operation', $operation)
+            ->where('bank_id', $bank_id)
+            ->get();
+
+        return response()->json($transaction);
     }
 
     public function destroy(Student $student)
@@ -303,11 +328,5 @@ class StudentController extends Controller
         }
         $student->delete();
         return response()->json();
-    }
-
-    public function getDepartments()
-    {
-        $departments = Department::orderBy('name')->get();
-        return response()->json($departments);
     }
 }

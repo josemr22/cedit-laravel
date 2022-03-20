@@ -27,8 +27,22 @@ class Student extends Model
         return $this->belongsTo(CourseTurn::class, 'course_turn_id');
     }
 
+    public function coursesGroup()
+    {
+        return $this->belongsToMany(CourseTurn::class);
+    }
+
     public function registered_by()
     {
         return $this->belongsTo(User::class, 'registered_by');
     }
+
+    // public function enrolled_by()
+    // {
+    //     return $this->belongsTo(User::class, 'registered_by');
+    // }
+
+    protected $casts = [
+        'date_of_birth' => 'datetime:Y-m-d',
+    ];
 }
