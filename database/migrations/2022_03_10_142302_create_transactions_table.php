@@ -19,7 +19,7 @@ class CreateTransactionsTable extends Migration
             $table->string('payment_date')->nullable();
             $table->foreignId('bank_id');
             $table->foreignId('user_id');
-            $table->string('operation');
+            $table->string('operation')->nullable();
             $table->timestamps();
         });
     }

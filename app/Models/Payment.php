@@ -23,4 +23,8 @@ class Payment extends Model
     {
         return $this->hasOne(CourseTurnStudent::class);
     }
+
+    protected $casts = [
+        'created_at' => 'datetime:Y-m-d H:i:s',
+    ];
 }

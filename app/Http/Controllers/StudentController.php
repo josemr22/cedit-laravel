@@ -74,7 +74,7 @@ class StudentController extends Controller
         $transaction->bank_id = $transactionForm['bank_id'];
         //TODO: When operation is mandatory?
         $bank = Bank::findOrFail($transactionForm['bank_id']);
-        if ($bank->id != 1) {
+        if ($bank->id != 1 && $bank->id != 6) {
             $transaction->operation = $transactionForm['operation'];
         }
         if ($bank->name == 'YAPE') {
