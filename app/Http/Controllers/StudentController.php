@@ -280,31 +280,6 @@ class StudentController extends Controller
         return response()->json($payment);
     }
 
-    public function payInstallment(Installment $installment, Request $request)
-    {
-        $data = $request->validate([
-            'amount' => 'required',
-        ]);
-
-        $transactionForm = $request->input('transaction');
-
-        $transaction = $this->createTransaction($transactionForm);
-
-        $damping = new Damping();
-        $damping->amount = $data['amount'];
-        //TODO: Change voucher
-        $damping->voucher = 'ABCDEFG';
-        $damping->transaction_id = $transaction->id;
-        $damping->installment_id = $installment->id;
-        $damping->save();
-
-        $installment->balance = floatval($installment->balance) - floatval($data['amount']);
-        if ($installment->balance < 0) {
-            $installment->balance = 0;
-        }
-        $installment->save();
-    }
-
     public function getByOperation($operation, $bank_id)
     {
         $transaction = Transaction::with('bank', 'payment.courseTurnStudent.student', 'damping.installment.payment.courseTurnStudent.student', 'responsable')
