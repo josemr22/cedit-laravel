@@ -6,6 +6,7 @@ use App\Http\Controllers\CourseController;
 use App\Http\Controllers\CourseTurnController;
 use App\Http\Controllers\InstallmentController;
 use App\Http\Controllers\SharedController;
+use App\Http\Controllers\SpendingController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TillController;
 use App\Http\Controllers\UserController;
@@ -60,10 +61,17 @@ Route::delete('/students/{student}', [StudentController::class, 'destroy']);
 Route::get('/students/operation/{operation}/{bank_id}', [StudentController::class, 'getByOperation']);
 
 //Till
+Route::get('/till/bank-report', [TillController::class, 'getBankReport']);
 Route::post('/till/pay-installment/{installment}', [TillController::class, 'payInstallment']);
 
 //Installment
 Route::get('/installments/{installment}', [InstallmentController::class, 'show']);
+
+// Spendings
+Route::get('/spendings', [SpendingController::class, 'index']);
+Route::post('/spendings', [SpendingController::class, 'store']);
+Route::put('/spendings/{spending}', [SpendingController::class, 'update']);
+Route::delete('/spendings/{spending}', [SpendingController::class, 'delete']);
 
 // Shared
 Route::get('/departments', [SharedController::class, 'getDepartments']);

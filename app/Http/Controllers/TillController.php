@@ -54,4 +54,61 @@ class TillController extends Controller
         $installment->save();
         return response()->json($installment);
     }
+
+    // public function getVouchers(){
+    //     $voucher_type = request('voucher_type') ?? '';
+    //     $from = request('from');
+    //     $to = request('to');
+
+
+    // }
+
+    public function getBankReport()
+    {
+        $from = request('from');
+        $to = request('to');
+        // $banks = Bank::query()
+        //     ->with('transactions')
+        //     ->get();
+
+        // $banks = Transaction::query()
+        //     ->with('payment')
+        //     ->with('damping')
+        //     ->get()
+        //     ->groupBy('bank_id');
+
+        $banks = Bank::query()
+            ->with('transactions.payment', 'transactions.dampings')
+            // ->whereHas('category', function ($query) use ($from) {
+            //     $query->where('name', 'like', "%{$search}%");
+            // })
+            ->get();
+
+        $resp = $banks->map(function ($b) {
+
+            $total = 0;
+
+            foreach ($b->transactions as $transaction) {
+                if ($transaction->payment != null) {
+                    $total = $total + $transaction->payment->amount;
+                } else {
+                    foreach ($transaction->dampings  as $damping) {
+                        $total = $total + $damping->amount;
+                    }
+                }
+            }
+
+            return [
+                'bank' => [
+                    "id" => $b->id,
+                    "name" => $b->name,
+                    "abbreviation" => $b->abbreviation,
+                ],
+                'amount' => $total
+            ];
+        });
+
+        // return response()->json($banks);
+        return response()->json($resp);
+    }
 }

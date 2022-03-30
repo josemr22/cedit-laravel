@@ -14,9 +14,9 @@ class Transaction extends Model
         return $this->belongsTo(Bank::class);
     }
 
-    public function damping()
+    public function dampings()
     {
-        return $this->hasOne(Damping::class);
+        return $this->hasMany(Damping::class);
     }
 
     public function payment()
