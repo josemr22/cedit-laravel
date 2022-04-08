@@ -26,7 +26,7 @@ class StudentFactory extends Factory
             'date_of_birth' => \Carbon\Carbon::now()->subYear(18),
             'observation' => $this->faker->sentence(4),
             'course_id' => 1,
-            'course_turn_id' => 1,
+            // 'course_turn_id' => 1,
             'registered_by' => 1,
         ];
     }

@@ -5,11 +5,13 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\CourseTurnController;
 use App\Http\Controllers\InstallmentController;
+use App\Http\Controllers\SaleController;
 use App\Http\Controllers\SharedController;
 use App\Http\Controllers\SpendingController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TillController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\AuthController;
 
 /*
 |--------------------------------------------------------------------------
@@ -22,9 +24,10 @@ use App\Http\Controllers\UserController;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
+
+//Auth
+Route::post('/login', [AuthController::class, 'login']);
+Route::middleware('auth:sanctum')->get('/user', [AuthController::class, 'getUser']);
 
 // Courses
 Route::get('/courses', [CourseController::class, 'index']);
@@ -54,7 +57,7 @@ Route::get('/students-with-course/{id}', [StudentController::class, 'showStudent
 Route::put('/students/student-course-turn/{courseTurnStudent}', [StudentController::class, 'updateStudentAndCourseTurn']);
 Route::get('/students-filter', [StudentController::class, 'filter']);
 Route::get('/students/{student}', [StudentController::class, 'show']);
-Route::get('/students/payment/{courseTurnStudent}', [StudentController::class, 'showPayments']);
+Route::get('/students/payment/{type}/{id}', [StudentController::class, 'showPayments']);
 Route::post('/students-enroll', [StudentController::class, 'enroll']);
 Route::post('/students', [StudentController::class, 'store']);
 Route::delete('/students/{student}', [StudentController::class, 'destroy']);
@@ -62,6 +65,7 @@ Route::get('/students/operation/{operation}/{bank_id}', [StudentController::clas
 
 //Till
 Route::get('/till/bank-report', [TillController::class, 'getBankReport']);
+Route::get('/till/production-by-user', [TillController::class, 'productionByUser']);
 Route::post('/till/pay-installment/{installment}', [TillController::class, 'payInstallment']);
 
 //Installment
@@ -69,11 +73,19 @@ Route::get('/installments/{installment}', [InstallmentController::class, 'show']
 
 // Spendings
 Route::get('/spendings', [SpendingController::class, 'index']);
+Route::get('/spendings/{spending}', [SpendingController::class, 'show']);
 Route::post('/spendings', [SpendingController::class, 'store']);
 Route::put('/spendings/{spending}', [SpendingController::class, 'update']);
 Route::delete('/spendings/{spending}', [SpendingController::class, 'delete']);
+
+// Spendings
+Route::get('/sales', [SaleController::class, 'index']);
+Route::post('/sales', [StudentController::class, 'storeSale']);
+Route::get('/sale-years', [SaleController::class, 'getSaleYears']);
 
 // Shared
 Route::get('/departments', [SharedController::class, 'getDepartments']);
 Route::get('/enrolled-years', [SharedController::class, 'getEnrolledYears']);
 Route::get('/banks', [SharedController::class, 'getBanks']);
+Route::get('/menu', [SharedController::class, 'getMenu']);
+Route::get('/get-dashboard-data', [SharedController::class, 'getDashboardData']);

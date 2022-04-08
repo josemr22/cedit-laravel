@@ -33,16 +33,16 @@ class RoleSeeder extends Seeder
 
         $dueño = Role::create(['name' => 'Dueño']);
 
-        $p1 = Permission::create(['name' => '1']);
-        $p2 = Permission::create(['name' => '2']);
-        $p3 = Permission::create(['name' => '3']);
-        $p4 = Permission::create(['name' => '4']);
-        $p5 = Permission::create(['name' => '5']);
-        $p6 = Permission::create(['name' => '6']);
-        $p7 = Permission::create(['name' => '7']);
-        $p8 = Permission::create(['name' => '8']);
-        $p9 = Permission::create(['name' => '9']);
-        $p10 = Permission::create(['name' => '10']);
+        $p1 = Permission::create(['name' => 'dashboard']);
+        $p2 = Permission::create(['name' => 'users']);
+        $p3 = Permission::create(['name' => 'students']);
+        $p4 = Permission::create(['name' => 'informs']);
+        $p5 = Permission::create(['name' => 'inscription']);
+        $p6 = Permission::create(['name' => 'courses']);
+        $p7 = Permission::create(['name' => 'till']);
+        $p8 = Permission::create(['name' => 'uniforms']);
+        $p9 = Permission::create(['name' => 'certificates']);
+        $p10 = Permission::create(['name' => 'services']);
 
         $administrador->syncPermissions([
             $p1,

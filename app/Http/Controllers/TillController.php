@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Bank;
+use App\Models\User;
 use App\Models\Damping;
 use App\Models\Installment;
 use App\Models\Transaction;
@@ -59,42 +60,29 @@ class TillController extends Controller
     //     $voucher_type = request('voucher_type') ?? '';
     //     $from = request('from');
     //     $to = request('to');
-
-
     // }
 
     public function getBankReport()
     {
         $from = request('from');
         $to = request('to');
-        // $banks = Bank::query()
-        //     ->with('transactions')
-        //     ->get();
-
-        // $banks = Transaction::query()
-        //     ->with('payment')
-        //     ->with('damping')
-        //     ->get()
-        //     ->groupBy('bank_id');
 
         $banks = Bank::query()
-            ->with('transactions.payment', 'transactions.dampings')
-            // ->whereHas('category', function ($query) use ($from) {
-            //     $query->where('name', 'like', "%{$search}%");
-            // })
+            ->with('transactions.dampings')
             ->get();
 
-        $resp = $banks->map(function ($b) {
+        $resp = $banks->map(function ($b) use ($from, $to) {
 
             $total = 0;
 
-            foreach ($b->transactions as $transaction) {
-                if ($transaction->payment != null) {
-                    $total = $total + $transaction->payment->amount;
-                } else {
-                    foreach ($transaction->dampings  as $damping) {
-                        $total = $total + $damping->amount;
-                    }
+            $transactions = $b->transactions()
+                ->whereDate('created_at', '>=', $from)
+                ->whereDate('created_at', '<=', $to)
+                ->get();
+
+            foreach ($transactions as $transaction) {
+                foreach ($transaction->dampings  as $damping) {
+                    $total = $total + $damping->amount;
                 }
             }
 
@@ -108,7 +96,43 @@ class TillController extends Controller
             ];
         });
 
-        // return response()->json($banks);
+        return response()->json($resp);
+    }
+
+    public function productionByUser()
+    {
+        $from = request('from');
+        $to = request('to');
+
+        $users = User::query()
+            ->with('transactions_made')
+            ->get();
+
+        $resp = $users->map(function ($u) use ($from, $to) {
+
+            $total = 0;
+
+            $transactions = $u->transactions_made()
+                ->whereDate('created_at', '>=', $from)
+                ->whereDate('created_at', '<=', $to)
+                ->get();
+
+            foreach ($transactions as $transaction) {
+                foreach ($transaction->dampings  as $damping) {
+                    $total = $total + $damping->amount;
+                }
+            }
+
+            return [
+                'user' => [
+                    "id" => $u->id,
+                    "name" => $u->name,
+                    "email" => $u->email,
+                ],
+                'amount' => $total
+            ];
+        });
+
         return response()->json($resp);
     }
 }

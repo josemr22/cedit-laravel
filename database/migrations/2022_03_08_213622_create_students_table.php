@@ -26,7 +26,7 @@ class CreateStudentsTable extends Migration
             $table->string('observation')->nullable();
             $table->foreignId('registered_by')->nullable();
             $table->foreignId('course_id');
-            $table->foreignId('course_turn_id');
+            // $table->foreignId('course_turn_id');
             $table->timestamps();
         });
     }

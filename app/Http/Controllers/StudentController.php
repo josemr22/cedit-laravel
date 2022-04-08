@@ -4,23 +4,28 @@ namespace App\Http\Controllers;
 
 use App\Models\Fee;
 use App\Models\Bank;
+use App\Models\Sale;
 use App\Models\Damping;
 use App\Models\Payment;
 use App\Models\Student;
 use App\Models\CourseTurn;
 use App\Models\Department;
+use App\Models\Installment;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
 use App\Models\CourseTurnStudent;
-use App\Models\Installment;
 
 class StudentController extends Controller
 {
     // Informes
     public function index()
     {
-        //
-        $informs = Student::with('department', 'registered_by', 'course_turn.turn', 'course')->orderByDesc('created_at')->get();
+        $informs = Student::query()
+            ->with('department', 'registered_by', 'course_turn.turn', 'course')
+            ->when(request('onlyNotEnrolled'), function ($query) {
+                return $query->doesntHave('course_turn_student');
+            })
+            ->orderByDesc('created_at')->get();
         return response()->json($informs);
     }
 
@@ -37,7 +42,7 @@ class StudentController extends Controller
             'date_of_birth' => 'required',
             'observation' => 'nullable',
             'course_id' => 'required',
-            'course_turn_id' => 'required',
+            // 'course_turn_id' => 'required',
             'registered_by' => 'required',
         ]);
 
@@ -135,11 +140,6 @@ class StudentController extends Controller
             ->get();
 
         return response()->json($studentsWithCourse);
-
-        // $students = Student::with('department', 'coursesGroup.course', 'coursesGroup.turn')
-        //     ->whereIn('id', $studentIds)
-        //     ->orderByDesc('created_at')->get();
-        // return response()->json($students);
     }
 
     public function filter()
@@ -151,7 +151,7 @@ class StudentController extends Controller
             ->whereHas('student', function ($query) use ($term) {
                 $query->where('name', 'like', "%$term%")
                     ->orWhere('dni', 'like', "%{$term}%");
-            })
+            })->take(10)
             ->get();
 
         return response()->json($studentsWithCourse);
@@ -195,30 +195,11 @@ class StudentController extends Controller
         $payment->type = $paymentForm['type'];
         $payment->observation = $paymentForm['observation'];
         $payment->amount = $paymentForm['amount'];
+        $payment->save();
         if ($payment->type) {
-
-            $payment->transaction_id = $transaction->id;
-            $payment->voucher = "ABCDEFGH";
-            $payment->save();
+            $this->createInstallmentAndDampingForEnroll('m', $paymentForm['amount'], $paymentForm['amount'], $payment->id, $transaction->id);
         } else {
-            $payment->save();
-
-            //Datos de Matrícula
-            $installment = new Installment();
-            $installment->type = 'm';
-            $installment->amount = $paymentForm['enroll_amount'];
-            $installment->payment_id = $payment->id;
-            $installment->save();
-
-            $damping = new Damping();
-            $damping->amount = $paymentForm['pay_enroll_amount'];
-            //TODO: CHANGE VOUCHER
-            $damping->voucher = 'ABCDEFG';
-            $damping->transaction_id = $transaction->id;
-            $damping->installment_id = $installment->id;
-            $damping->save();
-            $installment->balance = floatval($paymentForm['enroll_amount']) - floatval($paymentForm['pay_enroll_amount']);
-            $installment->save();
+            $this->createInstallmentAndDampingForEnroll('m', $paymentForm['enroll_amount'], $paymentForm['pay_enroll_amount'], $payment->id, $transaction->id);
             //=================
 
             $installments = $paymentForm['installments'];
@@ -259,6 +240,63 @@ class StudentController extends Controller
         return response()->json($student);
     }
 
+    private function createInstallmentAndDampingForEnroll($type, $enrollAmount, $dampingAmount, $paymentId, $transactionId)
+    {
+        $installment = new Installment();
+        $installment->type = $type;
+        $installment->amount = $enrollAmount;
+        $installment->payment_id = $paymentId;
+        $installment->save();
+
+        $damping = new Damping();
+        $damping->amount = $dampingAmount;
+        //TODO: CHANGE VOUCHER
+        $damping->voucher = 'ABCDEFG';
+        $damping->transaction_id = $transactionId;
+        $damping->installment_id = $installment->id;
+        $damping->save();
+        $installment->balance = floatval($enrollAmount) - floatval($dampingAmount);
+        $installment->save();
+    }
+
+    public function storeSale(Request $request)
+    {
+        //Create Transaction
+        $transactionForm = $request->input("transaction");
+
+        $transaction = $this->createTransaction($transactionForm);
+
+        //Payment
+        $paymentForm = $request->input('payment');
+
+        $payment = new Payment();
+        $amount = floatval($paymentForm['amount']);
+        $pay_amount = floatval($paymentForm['pay_amount']);
+        $paymentType = 1;
+        if ($amount !== $pay_amount) {
+            $paymentType = 0;
+        }
+        $payment->type = $paymentType;
+        $payment->observation = $paymentForm['observation'];
+        $payment->amount = $amount;
+        $payment->save();
+
+        $type = $request->input('type');
+
+        $this->createInstallmentAndDampingForEnroll($type, $amount, $pay_amount, $payment->id, $transaction->id);
+
+        //Create Sale
+        $sale = new Sale();
+        $sale->type = $type;
+        $sale->state = $request->input('state');
+        $sale->payment_id = $payment->id;
+        $sale->user_id = $transactionForm['user_id'];
+        $sale->course_turn_student_id = $request->input('course_turn_student_id');
+        $sale->save();
+
+        return response()->json($payment);
+    }
+
     /**
      * Display the specified resource.
      *
@@ -272,17 +310,29 @@ class StudentController extends Controller
         return response()->json($student);
     }
 
-    public function showPayments(CourseTurnStudent $courseTurnStudent)
+    public function showPayments(String $type, $id)
     {
         //
-        $payment = Payment::with('installments.dampings.transaction.bank', 'installments.dampings.transaction.responsable', 'courseTurnStudent.student', 'courseTurnStudent.courseTurn.course', 'courseTurnStudent.courseTurn.turn')
-            ->findOrFail($courseTurnStudent->payment->id);
+        switch ($type) {
+            case 'course':
+                $paymentId = CourseTurnStudent::findOrFail($id)->payment_id;
+                break;
+            case 'sale':
+                $paymentId = Sale::findOrFail($id)->payment_id;
+                break;
+
+            default:
+                abort(400);
+                break;
+        }
+        $payment = Payment::with('installments.dampings.transaction.bank', 'installments.dampings.transaction.responsable', 'courseTurnStudent.student', 'courseTurnStudent.courseTurn.course', 'courseTurnStudent.courseTurn.turn', 'sale.seller', 'sale.course_turn_student.courseTurn.course', 'sale.course_turn_student.courseTurn.turn', 'sale.course_turn_student.student',)
+            ->findOrFail($paymentId);
         return response()->json($payment);
     }
 
     public function getByOperation($operation, $bank_id)
     {
-        $transaction = Transaction::with('bank', 'payment.courseTurnStudent.student', 'damping.installment.payment.courseTurnStudent.student', 'responsable')
+        $transaction = Transaction::with('bank', 'dampings.installment.payment.courseTurnStudent.student', 'responsable')
             ->where('operation', $operation)
             ->where('bank_id', $bank_id)
             ->get();

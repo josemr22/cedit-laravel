@@ -1,20 +1,52 @@
 <?php
 
-class Role
+namespace App\Models;
+
+class Menu
 {
     public static function getList()
     {
         return [
-            '1' => 'Dashboard',
-            '2' => 'Usuarios',
-            '3' => 'Alumnos',
-            '4' => 'Informes',
-            '5' => 'Inscripción',
-            '6' => 'Cursos',
-            '7' => 'Caja',
-            '8' => 'Uninforme',
-            '9' => 'Certificados',
-            '10' => 'Servicios'
+            'dashboard' => [
+                'label' => 'Dashboard',
+                'route' => '/dashboard',
+            ],
+            'users' => [
+                'label' => 'Usuarios',
+                'route' => '/usuarios',
+            ],
+            'students' => [
+                'label' => 'Alumnos',
+                'route' => '/alumnos/lista',
+            ],
+            'informs' => [
+                'label' => 'Informes',
+                'route' => '/alumnos/informes',
+            ],
+            'inscription' => [
+                'label' => 'Inscripción',
+                'route' => '/alumnos/inscripcion',
+            ],
+            'courses' => [
+                'label' => 'Cursos',
+                'route' => '/cursos',
+            ],
+            'till' => [
+                'label' => 'Caja',
+                'route' => '/caja/gastos',
+            ],
+            'uniforms' => [
+                'label' => 'Uniformes',
+                'route' => '/ventas/uniformes',
+            ],
+            'certificates' => [
+                'label' => 'Certificados',
+                'route' => '/ventas/certificados',
+            ],
+            'services' => [
+                'label' => 'Servicios',
+                'route' => '/ventas/servicios',
+            ]
         ];
     }
 }

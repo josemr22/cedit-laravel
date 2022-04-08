@@ -37,6 +37,11 @@ class Student extends Model
         return $this->belongsTo(User::class, 'registered_by');
     }
 
+    public function course_turn_student()
+    {
+        return $this->hasMany(CourseTurnStudent::class);
+    }
+
     // public function enrolled_by()
     // {
     //     return $this->belongsTo(User::class, 'registered_by');
@@ -44,5 +49,6 @@ class Student extends Model
 
     protected $casts = [
         'date_of_birth' => 'datetime:Y-m-d',
+        'created_at' => 'datetime:Y-m-d H:i:s',
     ];
 }

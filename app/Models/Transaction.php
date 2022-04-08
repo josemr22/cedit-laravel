@@ -19,10 +19,10 @@ class Transaction extends Model
         return $this->hasMany(Damping::class);
     }
 
-    public function payment()
-    {
-        return $this->hasOne(Payment::class);
-    }
+    // public function payment()
+    // {
+    //     return $this->hasOne(Payment::class);
+    // }
 
     public function responsable()
     {

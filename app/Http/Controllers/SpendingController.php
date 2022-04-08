@@ -21,6 +21,11 @@ class SpendingController extends Controller
         return response()->json($spendings);
     }
 
+    public function show(Spending $spending)
+    {
+        return response()->json($spending);
+    }
+
     public function store(Request $request)
     {
         $data = $request->validate([

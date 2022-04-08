@@ -15,6 +15,6 @@ class SpendingSeeder extends Seeder
     public function run()
     {
         //
-        Spending::factory(50)->create();
+        Spending::factory(10)->create();
     }
 }

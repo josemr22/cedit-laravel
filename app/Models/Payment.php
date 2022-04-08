@@ -9,10 +9,10 @@ class Payment extends Model
 {
     use HasFactory;
 
-    public function transaction()
-    {
-        return $this->belongsTo(Transaction::class);
-    }
+    // public function transaction()
+    // {
+    //     return $this->belongsTo(Transaction::class);
+    // }
 
     public function installments()
     {
@@ -22,6 +22,11 @@ class Payment extends Model
     public function courseTurnStudent()
     {
         return $this->hasOne(CourseTurnStudent::class);
+    }
+
+    public function sale()
+    {
+        return $this->hasOne(Sale::class);
     }
 
     protected $casts = [
