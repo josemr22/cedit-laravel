@@ -13,26 +13,23 @@ class AuthController extends Controller
     //
     public function login(Request $request)
     {
-        $email = $request->input('email');
+        $user = $request->input('user');
         $password = $request->input('password');
 
-        $user = User::where('email', $email)->first();
+        $userModel = User::where('user', $user)->first();
 
-        //if (! $user || ! md5($password) == $user->password) {
-        // return response()->json(['a' => strtoupper(md5($password)), 'b' => $user->password]);
-
-        if (!$user || !Hash::check('password', $user->password)) {
+        if (!$userModel || (!Hash::check($password, $userModel->password))) {
             throw ValidationException::withMessages([
                 'user' => ['The provided credentials are incorrect.'],
             ]);
         }
 
-        $token = $user->createToken($email);
+        $token = $userModel->createToken($user);
 
         return response()->json([
             'ok' => true,
             'token' => $token->plainTextToken,
-            'user' => $user
+            'user' => $userModel
         ]);
     }
 

@@ -36,7 +36,7 @@ class UserController extends Controller
     {
         $data = $request->validate([
             'name' => 'required',
-            'email' => 'required | unique:users',
+            'user' => 'required | unique:users',
             'password' => 'required',
             'role_id' => 'required',
         ]);
@@ -44,7 +44,7 @@ class UserController extends Controller
         $user = new User();
 
         $user->name = $data['name'];
-        $user->email = $data['email'];
+        $user->user = $data['user'];
         $user->assignRole($data['role']);
         $user->password = bcrypt($data['password']);
         $user->save();
@@ -56,13 +56,13 @@ class UserController extends Controller
     {
         $data = $request->validate([
             'name' => 'required',
-            'email' => ["required", Rule::unique('users')->ignore($user->email, 'email')],
+            'user' => ["required", Rule::unique('users')->ignore($user->user, 'user')],
             'password' => 'nullable',
             'role' => 'required',
         ]);
 
         $user->name = $data['name'];
-        $user->email = $data['email'];
+        $user->user = $data['user'];
 
         $user->assignRole($data['role']);
 
