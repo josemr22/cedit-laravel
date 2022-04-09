@@ -26,6 +26,10 @@ class StudentSeeder extends Seeder
             'payment_date' => \Carbon\Carbon::now(),
             'bank_id' => 2,
             'user_id' => 1,
+            'voucher' => 'ABCDEFGHIJK',
+            'voucher_type' => 'R',
+            'voucher_state' => 'E',
+            'voucher_link' => 'https://cixsolution.com',
             'operation' => '123456789',
         ]);
 
@@ -33,6 +37,10 @@ class StudentSeeder extends Seeder
             'payment_date' => \Carbon\Carbon::now(),
             'bank_id' => 2,
             'user_id' => 1,
+            'voucher' => 'ABCDEFGHIJK',
+            'voucher_type' => 'R',
+            'voucher_state' => 'E',
+            'voucher_link' => 'https://cixsolution.com',
             'operation' => '987654321',
         ]);
 
@@ -50,8 +58,6 @@ class StudentSeeder extends Seeder
 
         $damping = new Damping();
         $damping->amount = 1000;
-        //TODO: CHANGE VOUCHER
-        $damping->voucher = 'ABCDEFG';
         $damping->transaction_id = $transaction1->id;
         $damping->installment_id = $installment->id;
         $damping->save();
@@ -84,8 +90,6 @@ class StudentSeeder extends Seeder
 
         $damping = new Damping();
         $damping->amount = 300;
-        //TODO: CHANGE VOUCHER
-        $damping->voucher = 'ABCDEFG';
         $damping->transaction_id = $transaction2->id;
         $damping->installment_id = $installment->id;
         $damping->save();
@@ -122,8 +126,6 @@ class StudentSeeder extends Seeder
             if ($firstInstallment) {
                 $damping = new Damping();
                 $damping->amount = $item['pay'];
-                //TODO: CHANGE VOUCHER
-                $damping->voucher = 'ABCDEFG';
                 $damping->transaction_id = $transaction2->id;
                 $damping->installment_id = $installment->id;
                 $damping->save();

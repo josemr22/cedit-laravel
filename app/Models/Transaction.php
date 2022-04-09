@@ -29,7 +29,7 @@ class Transaction extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    // protected $casts = [
-    //     'created_at' => 'datetime:Y-m-d H:i:s',
-    // ];
+    protected $casts = [
+        'created_at' => 'datetime:Y-m-d H:i:s',
+    ];
 }

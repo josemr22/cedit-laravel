@@ -17,9 +17,7 @@ class CreatePaymentsTable extends Migration
             $table->id();
             $table->float('amount');
             $table->boolean('type')->default(1);
-            // $table->string('voucher')->nullable();
             $table->string('observation')->nullable();
-            // $table->foreignId('transaction_id')->nullable();
             $table->timestamps();
         });
     }

@@ -2,21 +2,20 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Fee;
-use App\Models\Bank;
 use App\Models\Sale;
 use App\Models\Damping;
 use App\Models\Payment;
 use App\Models\Student;
 use App\Models\CourseTurn;
-use App\Models\Department;
 use App\Models\Installment;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
 use App\Models\CourseTurnStudent;
+use App\Traits\Helper;
 
 class StudentController extends Controller
 {
+    use Helper;
     // Informes
     public function index()
     {
@@ -70,24 +69,6 @@ class StudentController extends Controller
         $student->update($data);
 
         return $student;
-    }
-
-    private function createTransaction($transactionForm)
-    {
-        $transaction = new Transaction();
-        $transaction->user_id = $transactionForm['user_id'];
-        $transaction->bank_id = $transactionForm['bank_id'];
-        //TODO: When operation is mandatory?
-        $bank = Bank::findOrFail($transactionForm['bank_id']);
-        if ($bank->id != 1 && $bank->id != 6) {
-            $transaction->operation = $transactionForm['operation'];
-        }
-        if ($bank->name == 'YAPE') {
-            $transaction->name = $transactionForm['name'];
-            $transaction->payment_date = new \Carbon\Carbon($transactionForm['payment_date']);
-        }
-        $transaction->save();
-        return $transaction;
     }
 
     public function store(Request $request)
@@ -214,8 +195,6 @@ class StudentController extends Controller
                 if ($firstInstallment) {
                     $damping = new Damping();
                     $damping->amount = $item['pay'];
-                    //TODO: CHANGE VOUCHER
-                    $damping->voucher = 'ABCDEFG';
                     $damping->transaction_id = $transaction->id;
                     $damping->installment_id = $installment->id;
                     $damping->save();
@@ -250,8 +229,6 @@ class StudentController extends Controller
 
         $damping = new Damping();
         $damping->amount = $dampingAmount;
-        //TODO: CHANGE VOUCHER
-        $damping->voucher = 'ABCDEFG';
         $damping->transaction_id = $transactionId;
         $damping->installment_id = $installment->id;
         $damping->save();
@@ -263,6 +240,7 @@ class StudentController extends Controller
     {
         //Create Transaction
         $transactionForm = $request->input("transaction");
+        return $this->createTransaction($transactionForm);
 
         $transaction = $this->createTransaction($transactionForm);
 
