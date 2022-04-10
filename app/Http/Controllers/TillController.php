@@ -26,7 +26,8 @@ class TillController extends Controller
 
         $transactionForm = $request->input('transaction');
 
-        $transaction = $this->createTransaction($transactionForm);
+        $transactionResponse = $this->createTransaction($transactionForm);
+        $transaction = $transactionResponse['transaction'];
 
         $damping = new Damping();
         $damping->amount = $data['amount'];
@@ -39,7 +40,7 @@ class TillController extends Controller
             $installment->balance = 0;
         }
         $installment->save();
-        return response()->json($installment);
+        return response()->json($transactionResponse);
     }
 
     public function getBankReport()

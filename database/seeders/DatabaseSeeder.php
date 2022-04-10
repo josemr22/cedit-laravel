@@ -23,7 +23,8 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             DepartmentSeeder::class,
             StudentSeeder::class,
-            SpendingSeeder::class
+            SpendingSeeder::class,
+            CorrelativeSeeder::class
         ]);
     }
 }

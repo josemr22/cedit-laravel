@@ -167,7 +167,8 @@ class StudentController extends Controller
         //Create Transaction
         $transactionForm = $request->input("transaction");
 
-        $transaction = $this->createTransaction($transactionForm);
+        $transactionResponse = $this->createTransaction($transactionForm);
+        $transaction = $transactionResponse['transaction'];
 
         //Payment
         $paymentForm = $request->input('payment');
@@ -216,7 +217,7 @@ class StudentController extends Controller
         $enroll->start_date = new \Carbon\Carbon($courseTurnStudentData['start_date']);
         $enroll->save();
 
-        return response()->json($student);
+        return response()->json($transactionResponse);
     }
 
     private function createInstallmentAndDampingForEnroll($type, $enrollAmount, $dampingAmount, $paymentId, $transactionId)
@@ -240,9 +241,9 @@ class StudentController extends Controller
     {
         //Create Transaction
         $transactionForm = $request->input("transaction");
-        return $this->createTransaction($transactionForm);
 
-        $transaction = $this->createTransaction($transactionForm);
+        $transactionResponse = $this->createTransaction($transactionForm);
+        $transaction = $transactionResponse['transaction'];
 
         //Payment
         $paymentForm = $request->input('payment');
@@ -272,7 +273,7 @@ class StudentController extends Controller
         $sale->course_turn_student_id = $request->input('course_turn_student_id');
         $sale->save();
 
-        return response()->json($payment);
+        return response()->json($transactionResponse);
     }
 
     /**
