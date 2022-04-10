@@ -9,25 +9,21 @@ trait Helper
 {
     public function createTransaction($transactionForm)
     {
+        $trama = "09/03/2022|B001-0000211|03|PEN|25.42|0.00|0.00|4.58|4.58|PEN||||||||0.00|2005|30.00||||||||||||0.00|||||||01|22:58:27||||||CONTADO||
+     CORPORACION CEDIT EIRL|CORPORACION CEDIT EIRL|20604594295|140101|AV. BALTA NRO. 424 INT. 203 (BALTA Y FRANCISCO CABRERA) |CHICLAYO|LAMBAYEQUE|CHICLAYO|PE|CMOT8210|CMOTOS8210
+     42917981|1|GABRIEL CHANCAFE|SIMON CONDORI 286|PE|gabriel.chancafe.sistemas@gmail.com
+     TREINTA  CON 00/100 SOLES
+     
+     1|UN|1.00|ARROZ CON PATO|30.00|01|4.58|4.58|10|1000|||||24|25.42|25.42|||18|0.00";
 
-        $trama = "06/06/2018|B001-00000001|03|USD|338.98|0.00|0.00|61.02|61.02|USD||||||||0.00|2005|400.00||||||||||||0.00|||||||01
-        GRUPPO SEPARIN S.R.L.||20536435078||CAL. LOS ABETOS NRO. 660 URB. ROSALES DE SALAMANCA  LIMA - LIMA - ATE|||||PE|CMOT8210|CMOTOS8210
-        40757308|1|WILLIAMS  CESAR   GARRIAZO  LOBO|JR. CASMA 267 MIRAMARBAJO|PE|will65_6@hotmail.com
-        CUATROCIENTOS Y 00/100 DOLARES AMERICANOS
-        
-        1|UN|1|KIT COMBO SEC BORA 32 APACHE+TQ600X200 BI|400.00|01|61.02|61.02|10|1000|||||00000000022|338.98|338.98|||18.00|0.00
-        2|UN|1|TANQUE SEPAGAS  600 X 200  9.0 GLNS  BI TOROIDAL|0.00|01|0.00|0.00|10|1000|||||00000000278|0.00|0.00|||18.00|0.00
-        3|UN|1|KIT SECUENCIAL 4 CIL BORA 32 -  ZAVOLI 200 - 30 APACHE|0.00|01|0.00|0.00|10|1000|||||00000000155|0.00|0.00|||18.00|0.00
-        4|UN|4|GIGLER 1.75 MM|0.00|01|0.00|0.00|10|1000|||||00000002108|0.00|0.00|||18.00|0.00";
-
-        $wsdl = 'http://wscedit.cixsolution.com/50e3c1aff9cde504a9faf9849753ff9c/20606543027?wsdl';
+        $wsdl = "http://wscedit.cixsolution.com/dcaf84158950748f2ece0bf596df73a6/20604594295?wsdl";
 
         $options = array(
             'uri' => 'http://schemas.xmlsoap.org/soap/envelope/',
-            'style' => 1,
-            'use' => 1,
-            'soap_version' => 1,
-            'cache_wsdl' => 0,
+            'style' => SOAP_RPC,
+            'use' => SOAP_ENCODED,
+            'soap_version' => SOAP_1_1,
+            'cache_wsdl' => WSDL_CACHE_NONE,
             'connection_timeout' => 15,
             'trace' => true,
             'encoding' => 'UTF-8',
@@ -35,8 +31,12 @@ trait Helper
         );
         try {
             $soap = new \SoapClient($wsdl, $options);
-            $data = $soap->enviarCE('DNI', $trama);
+
+            $data = $soap->enviarCE('03', $trama);
+            dd($data);
+
             $ce = json_decode($data, true);
+
             $res = $ce['IND_OPERACION'];
             //echo "aaa".$res;
             //var_dump($ce);
