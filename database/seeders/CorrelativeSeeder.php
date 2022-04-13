@@ -20,7 +20,7 @@ class CorrelativeSeeder extends Seeder
             'type' => 'R',
         ]);
         Correlative::create([
-            'code' => '260',
+            'code' => '270',
             'type' => 'B',
         ]);
         Correlative::create([
