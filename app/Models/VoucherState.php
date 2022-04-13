@@ -10,6 +10,9 @@ class VoucherState
             'E' => [
                 'label' => 'Emitido',
             ],
+            'F' => [
+                'label' => 'Falló',
+            ],
         ];
     }
 }

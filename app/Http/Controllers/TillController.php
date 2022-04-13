@@ -8,6 +8,7 @@ use App\Traits\Helper;
 use App\Models\Damping;
 use App\Models\Spending;
 use App\Models\Installment;
+use App\Models\SaleType;
 use App\Models\Transaction;
 use App\Models\VoucherType;
 use App\Models\VoucherState;
@@ -26,8 +27,7 @@ class TillController extends Controller
 
         $transactionForm = $request->input('transaction');
 
-        $transactionResponse = $this->createTransaction($transactionForm);
-        $transaction = $transactionResponse['transaction'];
+        $transaction = $this->createTransaction($transactionForm);
 
         $damping = new Damping();
         $damping->amount = $data['amount'];
@@ -40,7 +40,51 @@ class TillController extends Controller
             $installment->balance = 0;
         }
         $installment->save();
-        return response()->json($transactionResponse);
+
+        $payment = $installment->payment;
+
+        if ($payment->courseTurnStudent != null) {
+            $student = $payment->courseTurnStudent->student;
+        }
+        if ($payment->sale != null) {
+            $student = $payment->sale->student;
+        }
+
+        $studentArr = [
+            'name' => strtoupper($student->name),
+            'address' => $student->address,
+            'email' => $student->email,
+        ];
+
+        $payDetail = [];
+
+        if ($installment->type == 'm') {
+            $label = "Pago de matrícula";
+        } else if ($installment->type == 'c') {
+            $number_installment = $installment->number;
+            $label = "Pago de mensualidad $number_installment";
+        } else {
+            $saleType = SaleType::getList()[$installment->type]['label'];
+            $label = "Pago de $saleType";
+        }
+
+        array_push($payDetail, [
+            'amount' => floatval($data['amount']),
+            'label' => $label
+        ]);
+
+        if ($transactionForm['voucher_type'] == 'B') {
+            $sunat_response = $this->sendToSunat($transaction->id, $studentArr, $payDetail);
+        } else {
+            $sunat_response = null;
+        }
+
+        $transaction_response = [
+            'transaction' => $transaction,
+            'sunat_response' => $sunat_response,
+        ];
+
+        return response()->json($transaction_response);
     }
 
     public function getBankReport()
@@ -208,7 +252,7 @@ class TillController extends Controller
             return [
                 'voucher' => $t->voucher,
                 'voucher_type' => $t->voucher_type,
-                'voucher_state' => VoucherState::getList()[$t->voucher_state]['label'],
+                'voucher_state' => VoucherState::getList()[$t->voucher_state]['label'] ?? null,
                 'student' => $studentName,
                 'date' => (new \Carbon\Carbon($t->created_at))->format('Y-m-d H:i:s'),
                 'total' => $total,

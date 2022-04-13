@@ -80,7 +80,7 @@ Route::post('/spendings', [SpendingController::class, 'store']);
 Route::put('/spendings/{spending}', [SpendingController::class, 'update']);
 Route::delete('/spendings/{spending}', [SpendingController::class, 'delete']);
 
-// Spendings
+// Sales
 Route::get('/sales', [SaleController::class, 'index']);
 Route::post('/sales', [StudentController::class, 'storeSale']);
 Route::get('/sale-years', [SaleController::class, 'getSaleYears']);

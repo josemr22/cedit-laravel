@@ -17,10 +17,10 @@ class CreateTransactionsTable extends Migration
             $table->id();
             $table->string('name')->nullable();
             $table->string('payment_date')->nullable();
-            $table->string('voucher');
-            $table->string('voucher_type');
-            $table->string('voucher_state');
-            $table->string('voucher_link');
+            $table->string('voucher')->nullable();
+            $table->string('voucher_type')->nullable();
+            $table->string('voucher_state')->nullable();
+            $table->string('voucher_link')->nullable();
             $table->foreignId('bank_id');
             $table->foreignId('user_id');
             $table->string('operation')->nullable();

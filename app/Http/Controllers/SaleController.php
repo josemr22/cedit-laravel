@@ -15,7 +15,7 @@ class SaleController extends Controller
         $sale_type = request('saleType');
 
         $sales = Sale::query()
-            ->with('seller', 'course_turn_student.courseTurn.course', 'course_turn_student.courseTurn.turn', 'course_turn_student.student', 'payment')
+            ->with('seller', 'course_turn_student.courseTurn.course', 'course_turn_student.courseTurn.turn', 'course_turn_student.student', 'payment.installments')
             ->where('type', $sale_type)
             ->whereYear('created_at', $sale_year)
             ->whereHas('course_turn_student', function ($query) use ($course_id) {

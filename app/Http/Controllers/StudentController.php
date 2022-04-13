@@ -11,6 +11,7 @@ use App\Models\Installment;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
 use App\Models\CourseTurnStudent;
+use App\Models\SaleType;
 use App\Traits\Helper;
 
 class StudentController extends Controller
@@ -167,8 +168,7 @@ class StudentController extends Controller
         //Create Transaction
         $transactionForm = $request->input("transaction");
 
-        $transactionResponse = $this->createTransaction($transactionForm);
-        $transaction = $transactionResponse['transaction'];
+        $transaction = $this->createTransaction($transactionForm);
 
         //Payment
         $paymentForm = $request->input('payment');
@@ -178,12 +178,30 @@ class StudentController extends Controller
         $payment->observation = $paymentForm['observation'];
         $payment->amount = $paymentForm['amount'];
         $payment->save();
+
+        $cts = CourseTurnStudent::findOrFail($courseTurnStudentData['course_turn_id']);
+        $courseName = strtoupper($cts->courseTurn->course->name);
         if ($payment->type) {
             $this->createInstallmentAndDampingForEnroll('m', $paymentForm['amount'], $paymentForm['amount'], $payment->id, $transaction->id);
+            $payDetail = [
+                [
+                    'label' => "Pago al contado en el curso de $courseName",
+                    'amount' => $paymentForm['amount']
+                ]
+            ];
         } else {
             $this->createInstallmentAndDampingForEnroll('m', $paymentForm['enroll_amount'], $paymentForm['pay_enroll_amount'], $payment->id, $transaction->id);
             //=================
-
+            $payDetail = [];
+            if (floatval($paymentForm['enroll_amount']) == floatval($paymentForm['pay_enroll_amount'])) {
+                $label = "Pago al contado en el curso de $courseName";
+            } else {
+                $label = "Pago parcial de matricula en el curso de $courseName";
+            }
+            array_push($payDetail, [
+                'amount' => $paymentForm['pay_enroll_amount'],
+                'label' => $label
+            ]);
             $installments = $paymentForm['installments'];
             $firstInstallment = true;
             foreach ($installments as $index => $item) {
@@ -200,6 +218,15 @@ class StudentController extends Controller
                     $damping->installment_id = $installment->id;
                     $damping->save();
                     $installment->balance = floatval($item['amount']) - floatval($item['pay']);
+                    if (floatval($item['amount']) == floatval($item['pay'])) {
+                        $label = " Pago completo de primera mensualidad en el curso de $courseName";
+                    } else {
+                        $label = "Pago parcial de primera mensualidad en el curso de $courseName";
+                    }
+                    array_push($payDetail, [
+                        'amount' => floatval($item['pay']),
+                        'label' => $label
+                    ]);
                 } else {
                     $installment->balance = $item['amount'];
                 }
@@ -217,7 +244,24 @@ class StudentController extends Controller
         $enroll->start_date = new \Carbon\Carbon($courseTurnStudentData['start_date']);
         $enroll->save();
 
-        return response()->json($transactionResponse);
+        $studentArr = [
+            'name' => strtoupper($student->name),
+            'address' => $student->address,
+            'email' => $student->email,
+        ];
+
+        if ($transactionForm['voucher_type'] == 'B') {
+            $sunat_response = $this->sendToSunat($transaction->id, $studentArr, $payDetail);
+        } else {
+            $sunat_response = null;
+        }
+
+        $transaction_response = [
+            'transaction' => $transaction,
+            'sunat_response' => $sunat_response,
+        ];
+
+        return response()->json($transaction_response);
     }
 
     private function createInstallmentAndDampingForEnroll($type, $enrollAmount, $dampingAmount, $paymentId, $transactionId)
@@ -242,8 +286,7 @@ class StudentController extends Controller
         //Create Transaction
         $transactionForm = $request->input("transaction");
 
-        $transactionResponse = $this->createTransaction($transactionForm);
-        $transaction = $transactionResponse['transaction'];
+        $transaction = $this->createTransaction($transactionForm);
 
         //Payment
         $paymentForm = $request->input('payment');
@@ -264,6 +307,14 @@ class StudentController extends Controller
 
         $this->createInstallmentAndDampingForEnroll($type, $amount, $pay_amount, $payment->id, $transaction->id);
 
+        $payDetail = [];
+        $type_label = SaleType::getList()[$type]['label'];
+
+        array_push($payDetail, [
+            'amount' => $amount,
+            'label' => "Pago de $type_label"
+        ]);
+
         //Create Sale
         $sale = new Sale();
         $sale->type = $type;
@@ -273,7 +324,27 @@ class StudentController extends Controller
         $sale->course_turn_student_id = $request->input('course_turn_student_id');
         $sale->save();
 
-        return response()->json($transactionResponse);
+        $student = $sale->course_turn_student->student;
+
+        $studentArr = [
+            'name' => strtoupper($student->name),
+            'address' => $student->address,
+            'email' => $student->email,
+        ];
+
+
+        if ($transactionForm['voucher_type'] == 'B') {
+            $sunat_response = $this->sendToSunat($transaction->id, $studentArr, $payDetail);
+        } else {
+            $sunat_response = null;
+        }
+
+        $transaction_response = [
+            'transaction' => $transaction,
+            'sunat_response' => $sunat_response,
+        ];
+
+        return response()->json($transaction_response);
     }
 
     /**

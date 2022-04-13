@@ -5,22 +5,18 @@ namespace App\Traits;
 use App\Models\Bank;
 use App\Models\Correlative;
 use App\Models\Transaction;
+use App\Models\VoucherType;
 use Carbon\Carbon;
 
 trait Helper
 {
     public function createTransaction($transactionForm)
     {
-        $voucher_type = $transactionForm['voucher_type'];
         $transaction = new Transaction();
-        //TODO: CHANGE VOUCHER
-        $transaction->voucher = 'ABCDEFG';
         $transaction->voucher_type = $transactionForm['voucher_type'];
-        $transaction->voucher_state = 'E';
         $transaction->voucher_link = 'https://cixsolution.com';
         $transaction->user_id = $transactionForm['user_id'];
         $transaction->bank_id = $transactionForm['bank_id'];
-        //TODO: When operation is mandatory?
         $bank = Bank::findOrFail($transactionForm['bank_id']);
         if ($bank->id != 1 && $bank->id != 6) {
             $transaction->operation = $transactionForm['operation'];
@@ -29,27 +25,40 @@ trait Helper
             $transaction->name = $transactionForm['name'];
             $transaction->payment_date = new \Carbon\Carbon($transactionForm['payment_date']);
         }
-
         $transaction->save();
+        return $transaction;
+    }
+
+    public function sendToSunat($transactionId, $student, $payDetail)
+    {
+        $transaction = Transaction::findOrFail($transactionId);
+        $voucher_type = $transaction->voucher_type;
+
+        $now = new \Carbon\Carbon();
+        $nowDate = (new \Carbon\Carbon($now))->format('d/m/Y');
+        $nowHour = (new \Carbon\Carbon($now))->format('H:i:s');
+        $doc_type = VoucherType::getList()[$voucher_type]['code'];
 
         $correlativeNumber = Correlative::orderByDesc('code')->where('type', $voucher_type)->firstOrFail()->code;
-
         $newCorrelativeNumber = $correlativeNumber + 1;
-
-        $newCorrelative = Correlative::create([
+        Correlative::create([
             'code' => $newCorrelativeNumber,
             'type' => $voucher_type
         ]);
+        $code = $voucher_type . '001-' . str_pad($newCorrelativeNumber, 7, '0', STR_PAD_LEFT);
+        $transaction->voucher = $code;
+        $detail = $this->getPaymentData($payDetail)['detail_string'];
+        $total = $this->getPaymentData($payDetail)['total'];
+        $total_text = $this->getPaymentData($payDetail)['total_text'];
+        $total_tax = $this->getPaymentData($payDetail)['total_tax'];
+        $total_without_tax = $this->getPaymentData($payDetail)['total_without_tax'];
 
-        $now = (new \Carbon\Carbon())->format('d/m/Y');
-        $code = $voucher_type . '001-' . str_pad($newCorrelativeNumber, '6', '7', STR_PAD_LEFT);
-
-        $trama = "{$now}|{$code}|03|PEN|25.42|0.00|0.00|4.58|4.58|PEN||||||||0.00|2005|30.00||||||||||||0.00|||||||01|22:58:27||||||CONTADO||
+        $trama = "{$nowDate}|{$code}|{$doc_type}|PEN|{$total_without_tax}|0.00|0.00|{$total_tax}|{$total_tax}|PEN||||||||0.00|2005|{$total}||||||||||||0.00|||||||01|{$nowHour}||||||CONTADO||
 CORPORACION CEDIT EIRL|CORPORACION CEDIT EIRL|20604594295|140101|AV. BALTA NRO. 424 INT. 203 (BALTA Y FRANCISCO CABRERA) |CHICLAYO|LAMBAYEQUE|CHICLAYO|PE CMOT8210|CMOTOS8210
-42917981|1|GABRIEL CHANCAFE|SIMON CONDORI 286|PE|gabriel.chancafe.sistemas@gmail.com
-TREINTA  CON 00/100 SOLES
+42917981|1|{$student['name']}|{$student['address']}|PE|{$student['email']}
+$total_text
 
-1|UN|1.00|ARROZ CON PATO|30.00|01|4.58|4.58|10|1000|||||24|25.42|25.42|||18|0.00";
+$detail";
 
         $wsdl = "http://wscedit.cixsolution.com/dcaf84158950748f2ece0bf596df73a6/20604594295?wsdl";
 
@@ -64,32 +73,56 @@ TREINTA  CON 00/100 SOLES
             'encoding' => 'UTF-8',
             'exceptions' => true,
         );
+
         try {
             $soap = new \SoapClient($wsdl, $options);
 
-            $data = $soap->enviarCE('03', $trama);
+            $data = $soap->enviarCE($doc_type, $trama);
 
             $ce = json_decode($data, true);
 
             $res = $ce['IND_OPERACION'];
-            //echo "aaa".$res;
-            //var_dump($ce);
             if ($res == '1') {
-                // si paso exitoso en tu sistema ten un flag de envio a sunat y actualizalo a 1, para que sepan que
-                // ya se envio a sunat
                 $transaction->voucher_state = 'E';
-                return [
-                    'ok' => true,
-                    'transaction' => $transaction,
-                    'resp_sunat' => $ce,
-                ];
+            } else {
+                $transaction->voucher_state = 'R';
             }
+            $transaction->save();
+            return  $ce;
         } catch (Exception $e) {
-            return [
-                'ok' => false,
-                'transaction' => $transaction,
-                'resp_sunat' => $e->getMessage(),
-            ];
+            $transaction->voucher_state = 'F';
+            $transaction->save();
+            return $e->getMessage();
         }
+    }
+
+    private function getPaymentData($detail)
+    {
+        $detailString = '';
+        $total = 0;
+        foreach ($detail as $key => $row) {
+            $price = floatval($row['amount']);
+            $total = $total + $price;
+
+            $tax = $price - ($price / 1.18);
+            $price_without_tax = $price - $tax;
+
+            $price = number_format($price, 2);
+            $tax = number_format($tax, 2);
+            $price_without_tax = number_format($price_without_tax, 2);
+
+            $rowNumber = $key + 1;
+            $rowString = "$rowNumber|UN|1.00|{$row['label']}|$price|01|$tax|$tax|10|1000|||||24|$price_without_tax|$price_without_tax|||18|0.00\r\n";
+            $detailString = $detailString . $rowString;
+        }
+        $total_tax = $total - ($total / 1.18);
+        $total_without_tax = $total - $total_tax;
+        return [
+            'detail_string' => $detailString,
+            'total' => number_format($total, 2),
+            'total_tax' => number_format($total_tax, 2),
+            'total_without_tax' => number_format($total_without_tax, 2),
+            'total_text' => 'SESENTA CON 00/100 SOLES'
+        ];
     }
 }
