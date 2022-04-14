@@ -6,13 +6,16 @@ use App\Models\Bank;
 use App\Models\User;
 use App\Traits\Helper;
 use App\Models\Damping;
+use App\Models\Student;
+use App\Models\SaleType;
 use App\Models\Spending;
 use App\Models\Installment;
-use App\Models\SaleType;
 use App\Models\Transaction;
 use App\Models\VoucherType;
 use App\Models\VoucherState;
 use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\App;
 
 class TillController extends Controller
 {
@@ -72,6 +75,15 @@ class TillController extends Controller
             'amount' => floatval($data['amount']),
             'label' => $label
         ]);
+
+        //createPayDetail
+        foreach ($payDetail as $value) {
+            PayDetail::create([
+                'amount' => $value['amount'],
+                'label' => $value['label'],
+                'transaction_id' => $transaction->id,
+            ]);
+        }
 
         if ($transactionForm['voucher_type'] == 'B') {
             $sunat_response = $this->sendToSunat($transaction->id, $studentArr, $payDetail);
@@ -262,5 +274,44 @@ class TillController extends Controller
         });
 
         return $vouchers;
+    }
+
+    public function getVoucherPdf($voucher)
+    {
+        $transaction = Transaction::query()
+            ->with('detail')
+            ->where('voucher', $voucher)
+            ->firstOrFail();
+
+        $payment = $transaction->dampings[0]->installment->payment;
+
+        if ($payment->courseTurnStudent != null) {
+            $student = $payment->courseTurnStudent->student;
+        }
+        if ($payment->sale != null) {
+            $student = $payment->sale->student;
+        }
+
+        $data = [
+            'voucher' => $voucher,
+            'date' => $transaction->created_at->format('d/m/Y'),
+            'client' => [
+                'name' => $student->name,
+                'dni' => $student->dni,
+            ],
+            'detail' => $transaction->detail->toArray(),
+            'responsable' => $transaction->responsable->name,
+            'total' => [
+                'amount' => 1000,
+                'label' => 'SON: QUINCE Y 00/100 SOLES
+                ',
+            ]
+        ];
+
+        $pdf = App::make('dompdf.wrapper');
+        $pdf = PDF::loadView('exports.voucher', [
+            'data' => $data
+        ]);
+        return $pdf->stream();
     }
 }

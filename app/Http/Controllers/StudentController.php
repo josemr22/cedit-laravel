@@ -11,6 +11,7 @@ use App\Models\Installment;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
 use App\Models\CourseTurnStudent;
+use App\Models\PayDetail;
 use App\Models\SaleType;
 use App\Traits\Helper;
 
@@ -234,6 +235,14 @@ class StudentController extends Controller
                 $firstInstallment = false;
             }
         }
+        //createPayDetail
+        foreach ($payDetail as $value) {
+            PayDetail::create([
+                'amount' => $value['amount'],
+                'label' => $value['label'],
+                'transaction_id' => $transaction->id,
+            ]);
+        }
 
         //Enroll
         $enroll = new CourseTurnStudent();
@@ -314,6 +323,15 @@ class StudentController extends Controller
             'amount' => $amount,
             'label' => "Pago de $type_label"
         ]);
+
+        //createPayDetail
+        foreach ($payDetail as $value) {
+            PayDetail::create([
+                'amount' => $value['amount'],
+                'label' => $value['label'],
+                'transaction_id' => $transaction->id,
+            ]);
+        }
 
         //Create Sale
         $sale = new Sale();

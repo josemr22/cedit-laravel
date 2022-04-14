@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Damping;
 use App\Models\Payment;
 use App\Models\Student;
+use App\Models\PayDetail;
 use App\Models\Installment;
 use App\Models\Transaction;
 use Illuminate\Database\Seeder;
@@ -33,6 +34,7 @@ class StudentSeeder extends Seeder
             'operation' => '123456789',
         ]);
 
+
         $transaction2 = Transaction::create([
             'payment_date' => \Carbon\Carbon::now(),
             'bank_id' => 2,
@@ -42,6 +44,18 @@ class StudentSeeder extends Seeder
             'voucher_state' => 'E',
             'voucher_link' => 'https://cixsolution.com',
             'operation' => '987654321',
+        ]);
+
+        //createPayDetail
+        PayDetail::create([
+            'amount' => 1000,
+            'label' => 'Texto de Prueba',
+            'transaction_id' => $transaction1->id,
+        ]);
+        PayDetail::create([
+            'amount' => 1000,
+            'label' => 'Texto de Prueba',
+            'transaction_id' => $transaction2->id,
         ]);
 
         $payment = new Payment();
