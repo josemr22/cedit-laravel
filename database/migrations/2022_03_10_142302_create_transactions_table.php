@@ -24,6 +24,7 @@ class CreateTransactionsTable extends Migration
             $table->foreignId('bank_id');
             $table->foreignId('user_id');
             $table->string('operation')->nullable();
+            $table->boolean('state')->default(true);
             $table->timestamps();
         });
     }

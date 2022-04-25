@@ -36,5 +36,6 @@ class Transaction extends Model
 
     protected $casts = [
         'created_at' => 'datetime:Y-m-d H:i:s',
+        'payment_date' => 'datetime:Y-m-d',
     ];
 }

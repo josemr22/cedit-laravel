@@ -45,7 +45,7 @@ class UserController extends Controller
 
         $user->name = $data['name'];
         $user->user = $data['user'];
-        $user->assignRole($data['role']);
+        $user->assignRole($data['role_id']);
         $user->password = bcrypt($data['password']);
         $user->save();
 
@@ -58,13 +58,13 @@ class UserController extends Controller
             'name' => 'required',
             'user' => ["required", Rule::unique('users')->ignore($user->user, 'user')],
             'password' => 'nullable',
-            'role' => 'required',
+            'role_id' => 'required',
         ]);
 
         $user->name = $data['name'];
         $user->user = $data['user'];
 
-        $user->assignRole($data['role']);
+        $user->assignRole($data['role_id']);
 
         if (isset($data['password'])) {
             $user->password = bcrypt($data['password']);

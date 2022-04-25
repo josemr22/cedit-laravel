@@ -20,6 +20,7 @@ class CreateInstallmentsTable extends Migration
             $table->float('amount')->default(0);
             $table->float('balance')->default(0);
             $table->float('late')->default(0);
+            $table->float('mora')->default(0);
             $table->string('observation')->nullable();
             $table->foreignId('payment_id');
             $table->timestamps();

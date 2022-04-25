@@ -16,6 +16,7 @@ use App\Models\VoucherState;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\App;
+use Luecano\NumeroALetras\NumeroALetras;
 
 class TillController extends Controller
 {
@@ -50,13 +51,14 @@ class TillController extends Controller
             $student = $payment->courseTurnStudent->student;
         }
         if ($payment->sale != null) {
-            $student = $payment->sale->student;
+            $student = $payment->sale->course_turn_student->student;
         }
 
         $studentArr = [
             'name' => strtoupper($student->name),
             'address' => $student->address,
             'email' => $student->email,
+            'num_doc' => $transactionForm['voucher_type'] == 'F' ? $transactionForm['ruc'] : $student->dni,
         ];
 
         $payDetail = [];
@@ -85,10 +87,14 @@ class TillController extends Controller
             ]);
         }
 
-        if ($transactionForm['voucher_type'] == 'B') {
-            $sunat_response = $this->sendToSunat($transaction->id, $studentArr, $payDetail);
-        } else {
+        if ($transactionForm['voucher_type'] == 'R') {
+            $code = $this->getCode($transaction->voucher_type);
+            $transaction->voucher = $code;
+            $transaction->voucher_state = 'E';
+            $transaction->save();
             $sunat_response = null;
+        } else {
+            $sunat_response = $this->sendToSunat($transaction->id, $studentArr, $payDetail);
         }
 
         $transaction_response = [
@@ -115,6 +121,7 @@ class TillController extends Controller
             $transactions = $b->transactions()
                 ->whereDate('created_at', '>=', $from)
                 ->whereDate('created_at', '<=', $to)
+                ->where('state', true)
                 ->get();
 
             foreach ($transactions as $transaction) {
@@ -152,6 +159,7 @@ class TillController extends Controller
             $transactions = $u->transactions_made()
                 ->whereDate('created_at', '>=', $from)
                 ->whereDate('created_at', '<=', $to)
+                ->where('state', true)
                 ->get();
 
             foreach ($transactions as $transaction) {
@@ -204,14 +212,16 @@ class TillController extends Controller
         ];
 
         foreach ($vouchers as $v) {
-            if ($v['voucher_type'] == 'R') {
-                $totales[VoucherType::getList()['R']['label']] = $totales[VoucherType::getList()['R']['label']] + $v['total'];
-            }
-            if ($v['voucher_type'] == 'B') {
-                $totales[VoucherType::getList()['B']['label']] = $totales[VoucherType::getList()['B']['label']] + $v['total'];
-            }
-            if ($v['voucher_type'] == 'F') {
-                $totales[VoucherType::getList()['F']['label']] = $totales[VoucherType::getList()['F']['label']] + $v['total'];
+            if ($v['state']) {
+                if ($v['voucher_type'] == 'R') {
+                    $totales[VoucherType::getList()['R']['label']] = $totales[VoucherType::getList()['R']['label']] + $v['total'];
+                }
+                if ($v['voucher_type'] == 'B') {
+                    $totales[VoucherType::getList()['B']['label']] = $totales[VoucherType::getList()['B']['label']] + $v['total'];
+                }
+                if ($v['voucher_type'] == 'F') {
+                    $totales[VoucherType::getList()['F']['label']] = $totales[VoucherType::getList()['F']['label']] + $v['total'];
+                }
             }
         }
 
@@ -244,7 +254,7 @@ class TillController extends Controller
             ->when($type, function ($query) use ($type) {
                 return $query->where('voucher_type',  $type);
             })
-            ->with('dampings.installment.payment.courseTurnStudent.student', 'dampings.installment.payment.sale.student')
+            ->with('dampings.installment.payment.courseTurnStudent.student', 'dampings.installment.payment.sale.course_turn_student.student')
             ->get();
 
         $vouchers = $transactions->map(function ($t) {
@@ -253,7 +263,7 @@ class TillController extends Controller
                 $studentName = $t->dampings[0]->installment->payment->courseTurnStudent->student->name;
             }
             if ($t->dampings[0]->installment->payment->sale) {
-                $studentName = $t->dampings[0]->installment->payment->sale->student->name;
+                $studentName = $t->dampings[0]->installment->payment->sale->course_turn_student->student->name;
             }
 
             $total = 0;
@@ -269,7 +279,8 @@ class TillController extends Controller
                 'date' => (new \Carbon\Carbon($t->created_at))->format('Y-m-d H:i:s'),
                 'total' => $total,
                 'responsable' => $t->responsable->name,
-                'link' => $t->voucher_link
+                'link' => $t->voucher_link,
+                'state' => $t->state,
             ];
         });
 
@@ -289,8 +300,16 @@ class TillController extends Controller
             $student = $payment->courseTurnStudent->student;
         }
         if ($payment->sale != null) {
-            $student = $payment->sale->student;
+            $student = $payment->sale->course_turn_student->student;
         }
+
+        $total = 0;
+        foreach ($transaction->detail as $row) {
+            $price = floatval($row['amount']);
+            $total = $total + $price;
+        }
+        $formatter = new NumeroALetras();
+        $total_text = $formatter->toInvoice($total);
 
         $data = [
             'voucher' => $voucher,
@@ -302,9 +321,9 @@ class TillController extends Controller
             'detail' => $transaction->detail->toArray(),
             'responsable' => $transaction->responsable->name,
             'total' => [
-                'amount' => 1000,
-                'label' => 'SON: QUINCE Y 00/100 SOLES
-                ',
+                'amount' => $total,
+                // 'label' => 'SON: QUINCE Y 00/100 SOLES
+                'label' => "SON: $total_text SOLES",
             ]
         ];
 
@@ -313,5 +332,17 @@ class TillController extends Controller
             'data' => $data
         ]);
         return $pdf->stream();
+    }
+
+    public function deletePay(Damping $damping)
+    {
+        $damping->state = false;
+        $damping->save();
+
+        $installment = $damping->installment;
+        $installment->balance = $installment->balance + $damping->amount;
+        $installment->save();
+
+        return response()->json($damping);
     }
 }

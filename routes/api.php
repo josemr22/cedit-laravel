@@ -12,6 +12,7 @@ use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TillController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\TransactionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -69,9 +70,17 @@ Route::get('/till/production-by-user', [TillController::class, 'productionByUser
 Route::post('/till/pay-installment/{installment}', [TillController::class, 'payInstallment']);
 Route::get('/till/vouchers', [TillController::class, 'getVouchers']);
 Route::get('/till/reports', [TillController::class, 'getReports']);
+Route::put('/till/delete-pay', [TillController::class, 'deletePay']);
 
 //Installment
 Route::get('/installments/{installment}', [InstallmentController::class, 'show']);
+Route::post('/installments/create-mora/{installment}', [InstallmentController::class, 'createMora']);
+
+//Transaction
+Route::get('/transactions/{transaction}', [TransactionController::class, 'show']);
+Route::get('/transactions/check-delete/{transaction}', [TransactionController::class, 'checkDelete']);
+Route::put('/transactions/{transaction}', [TransactionController::class, 'update']);
+Route::delete('/transactions/{transaction}', [TransactionController::class, 'delete']);
 
 // Spendings
 Route::get('/spendings', [SpendingController::class, 'index']);

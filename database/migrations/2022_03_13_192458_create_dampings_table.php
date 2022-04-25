@@ -16,6 +16,7 @@ class CreateDampingsTable extends Migration
         Schema::create('dampings', function (Blueprint $table) {
             $table->id();
             $table->float('amount');
+            $table->boolean('state')->default(true);
             $table->foreignId('transaction_id');
             $table->foreignId('installment_id');
             $table->timestamps();

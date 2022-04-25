@@ -13,6 +13,9 @@ class VoucherState
             'F' => [
                 'label' => 'Falló',
             ],
+            'A' => [
+                'label' => 'Anulado',
+            ],
         ];
     }
 }

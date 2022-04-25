@@ -257,12 +257,17 @@ class StudentController extends Controller
             'name' => strtoupper($student->name),
             'address' => $student->address,
             'email' => $student->email,
+            'num_doc' => $transactionForm['voucher_type'] == 'F' ? $transactionForm['ruc'] : $student->dni,
         ];
 
-        if ($transactionForm['voucher_type'] == 'B') {
-            $sunat_response = $this->sendToSunat($transaction->id, $studentArr, $payDetail);
-        } else {
+        if ($transactionForm['voucher_type'] == 'R') {
+            $code = $this->getCode($transaction->voucher_type);
+            $transaction->voucher = $code;
+            $transaction->voucher_state = 'E';
+            $transaction->save();
             $sunat_response = null;
+        } else {
+            $sunat_response = $this->sendToSunat($transaction->id, $studentArr, $payDetail);
         }
 
         $transaction_response = [
@@ -348,13 +353,18 @@ class StudentController extends Controller
             'name' => strtoupper($student->name),
             'address' => $student->address,
             'email' => $student->email,
+            'num_doc' => $transactionForm['voucher_type'] == 'F' ? $transactionForm['ruc'] : $student->dni,
         ];
 
 
-        if ($transactionForm['voucher_type'] == 'B') {
-            $sunat_response = $this->sendToSunat($transaction->id, $studentArr, $payDetail);
-        } else {
+        if ($transactionForm['voucher_type'] == 'R') {
+            $code = $this->getCode($transaction->voucher_type);
+            $transaction->voucher = $code;
+            $transaction->voucher_state = 'E';
+            $transaction->save();
             $sunat_response = null;
+        } else {
+            $sunat_response = $this->sendToSunat($transaction->id, $studentArr, $payDetail);
         }
 
         $transaction_response = [
