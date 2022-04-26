@@ -9,7 +9,7 @@ class VoucherType
         return [
             'F' => [
                 'label' => 'Factura',
-                'code' => '06',
+                'code' => '01',
             ],
             'R' => [
                 'label' => 'Recibo',

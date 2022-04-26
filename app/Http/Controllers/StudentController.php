@@ -254,9 +254,9 @@ class StudentController extends Controller
         $enroll->save();
 
         $studentArr = [
-            'name' => strtoupper($student->name),
-            'address' => $student->address,
-            'email' => $student->email,
+            'name' => $transactionForm['voucher_type'] == 'F' ? strtoupper($transactionForm['razon_social']) : strtoupper($student->name),
+            'address' => $transactionForm['voucher_type'] == 'F' ? $transactionForm['address'] : $student->address,
+            'email' => $transactionForm['voucher_type'] == 'F' ? $transactionForm['email'] : $student->email,
             'num_doc' => $transactionForm['voucher_type'] == 'F' ? $transactionForm['ruc'] : $student->dni,
         ];
 
@@ -350,9 +350,9 @@ class StudentController extends Controller
         $student = $sale->course_turn_student->student;
 
         $studentArr = [
-            'name' => strtoupper($student->name),
-            'address' => $student->address,
-            'email' => $student->email,
+            'name' => $transactionForm['voucher_type'] == 'F' ? strtoupper($transactionForm['razon_social']) : strtoupper($student->name),
+            'address' => $transactionForm['voucher_type'] == 'F' ? $transactionForm['address'] : $student->address,
+            'email' => $transactionForm['voucher_type'] == 'F' ? $transactionForm['email'] : $student->email,
             'num_doc' => $transactionForm['voucher_type'] == 'F' ? $transactionForm['ruc'] : $student->dni,
         ];
 

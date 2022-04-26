@@ -48,12 +48,24 @@ trait Helper
         $total_tax = $this->getPaymentData($payDetail)['total_tax'];
         $total_without_tax = $this->getPaymentData($payDetail)['total_without_tax'];
 
-        $trama = "{$nowDate}|{$code}|{$doc_type}|PEN|{$total_without_tax}|0.00|0.00|{$total_tax}|{$total_tax}|PEN||||||||0.00|2005|{$total}||||||||||||0.00|||||||01|{$nowHour}||||||CONTADO||
+        if ($voucher_type == 'B') {
+
+            $trama = "{$nowDate}|{$code}|{$doc_type}|PEN|{$total_without_tax}|0.00|0.00|{$total_tax}|{$total_tax}|PEN||||||||0.00|2005|{$total}||||||||||||0.00|||||||01|{$nowHour}||||||CONTADO||
 CORPORACION CEDIT EIRL|CORPORACION CEDIT EIRL|20604594295|140101|AV. BALTA NRO. 424 INT. 203 (BALTA Y FRANCISCO CABRERA) |CHICLAYO|LAMBAYEQUE|CHICLAYO|PE CMOT8210|CMOTOS8210
 {$student['num_doc']}|1|{$student['name']}|{$student['address']}|PE|{$student['email']}
 $total_text
 
 $detail";
+        } else {
+            $nowDate2Arr = explode("/", $nowDate);
+            $nowDate2 = $nowDate2Arr[2] . '-' . $nowDate2Arr[1] . '-' . $nowDate2Arr[0];
+            $trama = "{$nowDate}|{$code}|{$doc_type}|PEN|{$total_without_tax}|0.00|0.00|{$total_tax}|{$total_tax}|PEN||||||||0.00|2005|{$total}||||||||||||||0.00|||||||01|{$nowHour}||||||CONTADO|||{$total}|1|{$total}|{$nowDate2}
+CORPORACION CEDIT EIRL|CORPORACION CEDIT EIRL|20604594295|140101|AV. BALTA NRO. 424 INT. 203 (BALTA Y FRANCISCO CABRERA) ||CHICLAYO|LAMBAYEQUE|CHICLAYO|PE|CMOT8210|CMOTOS8210
+{$student['num_doc']}|6|{$student['name']}|{$student['name']}||{$student['address']}|||||PE|{$student['email']}
+$total_text
+
+$detail";
+        }
 
         $wsdl = "http://wscedit.cixsolution.com/dcaf84158950748f2ece0bf596df73a6/20604594295?wsdl";
 
@@ -73,7 +85,6 @@ $detail";
             $soap = new \SoapClient($wsdl, $options);
 
             try {
-                //code...
                 $data = $soap->enviarCE($doc_type, $trama);
             } catch (\Throwable $th) {
                 return $this->catchSunatResponse($th->getMessage(), $transaction);

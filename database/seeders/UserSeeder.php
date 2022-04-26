@@ -23,7 +23,7 @@ class UserSeeder extends Seeder
 
         $user->assignRole('Administrador');
 
-        for ($i = 0; $i < 50; $i++) {
+        for ($i = 0; $i < 4; $i++) {
             $u = User::factory()->create();
             $u->assignRole('Ventas');
         }

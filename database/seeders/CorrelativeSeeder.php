@@ -16,15 +16,15 @@ class CorrelativeSeeder extends Seeder
     {
         //
         Correlative::create([
-            'code' => '300',
+            'code' => '400',
             'type' => 'R',
         ]);
         Correlative::create([
-            'code' => '300',
+            'code' => '400',
             'type' => 'B',
         ]);
         Correlative::create([
-            'code' => '300',
+            'code' => '400',
             'type' => 'F',
         ]);
     }
