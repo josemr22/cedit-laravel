@@ -24,6 +24,7 @@ class CreateInstallmentsTable extends Migration
             $table->string('observation')->nullable();
             $table->foreignId('payment_id');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

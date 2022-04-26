@@ -19,6 +19,7 @@ class CreatePaymentsTable extends Migration
             $table->boolean('type')->default(1);
             $table->string('observation')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

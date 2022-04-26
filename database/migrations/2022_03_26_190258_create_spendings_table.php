@@ -20,6 +20,7 @@ class CreateSpendingsTable extends Migration
             $table->string('date')->nullable();
             $table->foreignId('user_id');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

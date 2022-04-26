@@ -20,6 +20,7 @@ class CreateDampingsTable extends Migration
             $table->foreignId('transaction_id');
             $table->foreignId('installment_id');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

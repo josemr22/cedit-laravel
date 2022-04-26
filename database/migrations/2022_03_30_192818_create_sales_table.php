@@ -21,6 +21,7 @@ class CreateSalesTable extends Migration
             $table->foreignId('course_turn_student_id');
             $table->foreignId('user_id');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

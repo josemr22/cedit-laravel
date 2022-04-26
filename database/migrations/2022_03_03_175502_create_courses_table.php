@@ -18,6 +18,7 @@ class CreateCoursesTable extends Migration
             $table->string('name');
             $table->string('days');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
