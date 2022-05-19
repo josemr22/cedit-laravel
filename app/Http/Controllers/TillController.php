@@ -203,13 +203,13 @@ class TillController extends Controller
 
         $vouchers = $this->doAndGetVouchers($data);
 
-        $vouchers2 = $vouchers->toArray();
+        // $vouchers2 = $vouchers->toArray();
 
-        $vouchers = [];
+        // $vouchers = [];
 
-        foreach ($vouchers2 as $key => $value) {
-            array_push($vouchers, $value);
-        }
+        // foreach ($vouchers2 as $key => $value) {
+        //     array_push($vouchers, $value);
+        // }
 
         $totales = [
             VoucherType::getList()['R']['label'] => 0,
@@ -300,6 +300,14 @@ class TillController extends Controller
         $vouchers = $vouchers->filter(function ($e) {
             return $e;
         });
+
+        $vouchers2 = $vouchers->toArray();
+
+        $vouchers = [];
+
+        foreach ($vouchers2 as $key => $value) {
+            array_push($vouchers, $value);
+        }
 
         return $vouchers;
     }
