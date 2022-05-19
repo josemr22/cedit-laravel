@@ -257,6 +257,9 @@ class TillController extends Controller
             ->get();
 
         $vouchers = $transactions->map(function ($t) {
+            if ($t->dampings[0]->installment->payment == null) {
+                return null;
+            }
             $studentName = '';
             if ($t->dampings[0]->installment->payment->courseTurnStudent) {
                 $studentName = $t->dampings[0]->installment->payment->courseTurnStudent->student->name;
