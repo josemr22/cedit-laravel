@@ -203,12 +203,21 @@ class TillController extends Controller
 
         $vouchers = $this->doAndGetVouchers($data);
 
+        $vouchers2 = $vouchers->toArray();
+
+        $vouchers = [];
+
+        foreach ($vouchers2 as $key => $value) {
+            array_push($vouchers, $value);
+        }
+
         $totales = [
             VoucherType::getList()['R']['label'] => 0,
             VoucherType::getList()['B']['label'] => 0,
             VoucherType::getList()['F']['label'] => 0,
             'Gastos' => 0,
         ];
+
 
         foreach ($vouchers as $v) {
             if ($v['state']) {
@@ -233,7 +242,6 @@ class TillController extends Controller
             $totales['Gastos'] = $totales['Gastos'] + $s->amount;
         }
 
-
         $resp = [
             'vouchers' => $vouchers,
             'totales' =>  $totales,
@@ -257,8 +265,11 @@ class TillController extends Controller
             ->get();
 
         $vouchers = $transactions->map(function ($t) {
+            if (count($t->dampings) < 1) {
+                return false;
+            }
             if ($t->dampings[0]->installment->payment == null) {
-                return null;
+                return false;
             }
             $studentName = '';
             if ($t->dampings[0]->installment->payment->courseTurnStudent) {
@@ -284,6 +295,10 @@ class TillController extends Controller
                 'link' => $t->voucher_link,
                 'state' => $t->state,
             ];
+        });
+
+        $vouchers = $vouchers->filter(function ($e) {
+            return $e;
         });
 
         return $vouchers;
