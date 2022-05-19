@@ -180,8 +180,8 @@ class StudentController extends Controller
         $payment->amount = $paymentForm['amount'];
         $payment->save();
 
-        $cts = CourseTurnStudent::findOrFail($courseTurnStudentData['course_turn_id']);
-        $courseName = strtoupper($cts->courseTurn->course->name);
+        $ct = CourseTurn::findOrFail($courseTurnStudentData['course_turn_id']);
+        $courseName = strtoupper($ct->course->name);
         if ($payment->type) {
             $this->createInstallmentAndDampingForEnroll('m', $paymentForm['amount'], $paymentForm['amount'], $payment->id, $transaction->id);
             $payDetail = [
