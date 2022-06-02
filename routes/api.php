@@ -68,6 +68,7 @@ Route::get('/students/operation/{operation}/{bank_id}', [StudentController::clas
 Route::get('/till/bank-report', [TillController::class, 'getBankReport']);
 Route::get('/till/production-by-user', [TillController::class, 'productionByUser']);
 Route::post('/till/pay-installment/{installment}', [TillController::class, 'payInstallment']);
+Route::put('/till/installment/{installment}', [TillController::class, 'editInstallment']);
 Route::get('/till/vouchers', [TillController::class, 'getVouchers']);
 Route::get('/till/reports', [TillController::class, 'getReports']);
 Route::put('/till/delete-pay', [TillController::class, 'deletePay']);

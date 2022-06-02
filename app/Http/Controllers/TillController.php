@@ -104,6 +104,25 @@ class TillController extends Controller
         return response()->json($transaction_response);
     }
 
+    public function editInstallment(Installment $installment, Request $request)
+    {
+        $data = $request->validate([
+            'amount' => 'required',
+        ]);
+
+        $diff = floatval($installment->amount) - floatval($data['amount']);
+
+        $installment->amount = floatval($data['amount']);
+
+        $installment->balance = floatval($installment->balance) - $diff;
+        if ($installment->balance < 0) {
+            $installment->balance = 0;
+        }
+        $installment->save();
+
+        return response()->json(true);
+    }
+
     public function getBankReport()
     {
         $from = request('from');
@@ -283,6 +302,7 @@ class TillController extends Controller
                 'responsable' => $t->responsable->name,
                 'link' => $t->voucher_link,
                 'state' => $t->state,
+                'transaction_id' => $t->id,
             ];
         });
 
