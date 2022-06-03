@@ -62,12 +62,16 @@ class TillController extends Controller
         ];
         $payDetail = [];
 
+        
         if ($installment->type == 'm') {
-            $label = "Pago de matrícula";
+            $courseName = $installment->payment->courseTurnStudent->courseTurn->course->name;
+            $label = "Pago de matrícula del curso $courseName";
         } else if ($installment->type == 'c') {
+            $courseName = $installment->payment->courseTurnStudent->courseTurn->course->name;
             $number_installment = $installment->number;
-            $label = "Pago de mensualidad $number_installment";
+            $label = "Pago de mensualidad $number_installment del curso $courseName";
         } else {
+            // $courseName = $installment->payment->sale->course_turn_student->courseTurn->course->name;
             $saleType = SaleType::getList()[$installment->type]['label'];
             $label = "Pago de $saleType";
         }
