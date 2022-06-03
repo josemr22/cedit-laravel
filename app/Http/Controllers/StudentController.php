@@ -268,6 +268,7 @@ class StudentController extends Controller
             $sunat_response = null;
         } else {
             $sunat_response = $this->sendToSunat($transaction->id, $studentArr, $payDetail);
+            $transaction = Transaction::find($transaction->id);
         }
 
         $transaction_response = [
