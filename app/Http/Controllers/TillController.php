@@ -362,6 +362,7 @@ class TillController extends Controller
 
         $data = [
             'voucher' => $voucher,
+            'voucher_title' => VoucherType::getList()[$transaction->voucher_type]['title'],
             'date' => $transaction->created_at->format('d/m/Y'),
             'client' => [
                 'name' => $student->name,

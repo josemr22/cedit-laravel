@@ -10,14 +10,17 @@ class VoucherType
             'F' => [
                 'label' => 'Factura',
                 'code' => '01',
+                'title' => 'Factura Electrónica'
             ],
             'R' => [
                 'label' => 'Recibo',
                 'code' => '07',
+                'title' => 'Recibo Electrónico'
             ],
             'B' => [
                 'label' => 'Boleta',
                 'code' => '03',
+                'title' => 'Boleta Electrónica'
             ],
         ];
     }

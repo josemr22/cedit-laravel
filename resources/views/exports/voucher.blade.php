@@ -45,7 +45,7 @@
             <p>AV. BALTA NRO. 424 INT. 203-CHICLAYO</p>
             <p>(BALTA Y FRANCISCO CABRERA)</p>
             <p>Teléfono: 073 331669</p>
-            <p>RECIBO ELECTRÓNICO</p>
+            <p>{{mb_strtoupper($data['voucher_title'])}}</p>
             <p>{{$data['voucher']}}</p>
         </div>
     </div>
