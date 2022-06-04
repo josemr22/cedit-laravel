@@ -103,4 +103,47 @@ class TransactionController extends Controller
 
         return response()->json($response);
     }
+
+    public function resendToSunat(Request $request){
+        $data = $request->validate([
+            'voucher' => 'required'
+        ]);
+
+        $transaction = Transaction::where('voucher', $data['voucher'])->firstOrFail();
+
+        if($transaction->voucher_type == 'F'){
+            $studentArr = [
+                'name' => strtoupper($transaction->razon_social),
+                'address' => $transaction->address,
+                'email' => $transaction->email,
+                'num_doc' => $transaction->doc_num,
+            ];
+        }else{
+            if($transaction->dampings[0]->installment->payment->courseTurnStudent != null){
+                $student = $transaction->dampings[0]->installment->payment->courseTurnStudent->student;
+            }else{
+                $student = $transaction->dampings[0]->installment->payment->sale->course_turn_student->student;
+            }
+
+            $studentArr = [
+                'name' => strtoupper($student->name),
+                'address' => $student->address,
+                'email' => $student->email,
+                'num_doc' => $student->dni,
+            ];
+        }
+
+        $pds = $transaction->detail;
+
+        $pds = $pds->map(function($pd){
+            return [
+                'amount' => floatval($pd->amount),
+                'label' => $pd->label
+            ];
+        })->toArray();
+
+        $sunat_response = $this->sendToSunat($transaction->id, $studentArr, $payDetail);
+
+        return response()->json($sunat_response);
+    }
 }

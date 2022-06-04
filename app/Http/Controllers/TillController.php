@@ -31,7 +31,14 @@ class TillController extends Controller
 
         $transactionForm = $request->input('transaction');
 
-        $transaction = $this->createTransaction($transactionForm);
+        $enterpriseData = [
+            'razon_social' => strtoupper($transactionForm['razon_social']),
+            'email' => $transactionForm['address'],
+            'address' => $transactionForm['email'],
+            'doc_num' => $transactionForm['ruc'],
+        ];
+
+        $transaction = $this->createTransaction($transactionForm, $enterpriseData);
 
         $damping = new Damping();
         $damping->amount = $data['amount'];
@@ -363,10 +370,11 @@ class TillController extends Controller
         $data = [
             'voucher' => $voucher,
             'voucher_title' => VoucherType::getList()[$transaction->voucher_type]['title'],
+            'voucher_type' => $transaction->voucher_type,
             'date' => $transaction->created_at->format('d/m/Y'),
             'client' => [
-                'name' => $student->name,
-                'dni' => $student->dni,
+                'name' => $transaction->voucher_type != 'F' ? $student->name : $transaction->razon_social,
+                'dni' => $transaction->voucher_type != 'F' ? $student->dni : $transaction->doc_num,
             ],
             'detail' => $transaction->detail->toArray(),
             'responsable' => $transaction->responsable->name,

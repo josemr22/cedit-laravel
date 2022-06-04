@@ -10,10 +10,16 @@ use Luecano\NumeroALetras\NumeroALetras;
 
 trait Helper
 {
-    public function createTransaction($transactionForm)
+    public function createTransaction($transactionForm, $enterprise)
     {
         $transaction = new Transaction();
         $transaction->voucher_type = $transactionForm['voucher_type'];
+        if($transaction->voucher_type == 'F'){
+            $transaction->razon_social = $enterprise['razon_social'];
+            $transaction->email = $enterprise['email'];
+            $transaction->address = $enterprise['address'];
+            $transaction->doc_num = $enterprise['doc_num'];
+        }
         $transaction->voucher_link = 'https://cixsolution.com';
         $transaction->user_id = $transactionForm['user_id'];
         $transaction->bank_id = $transactionForm['bank_id'];

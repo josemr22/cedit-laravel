@@ -169,7 +169,14 @@ class StudentController extends Controller
         //Create Transaction
         $transactionForm = $request->input("transaction");
 
-        $transaction = $this->createTransaction($transactionForm);
+        $enterpriseData = [
+            'razon_social' => strtoupper($transactionForm['razon_social']),
+            'address' => $transactionForm['address'],
+            'email' => $transactionForm['email'],
+            'doc_num' => $transactionForm['ruc'],
+        ];
+
+        $transaction = $this->createTransaction($transactionForm, $enterpriseData);
 
         //Payment
         $paymentForm = $request->input('payment');
@@ -237,7 +244,7 @@ class StudentController extends Controller
         }
         //createPayDetail
         foreach ($payDetail as $value) {
-            PayDetail::create([
+            $pd = PayDetail::create([
                 'amount' => $value['amount'],
                 'label' => $value['label'],
                 'transaction_id' => $transaction->id,
@@ -303,7 +310,14 @@ class StudentController extends Controller
 
         $course_turn_student_id = $request->input('course_turn_student_id');
 
-        $transaction = $this->createTransaction($transactionForm);
+        $enterpriseData = [
+            'razon_social' => strtoupper($transactionForm['razon_social']),
+            'email' => $transactionForm['address'],
+            'address' => $transactionForm['email'],
+            'doc_num' => $transactionForm['ruc'],
+        ];
+
+        $transaction = $this->createTransaction($transactionForm, $enterpriseData);
 
         //Payment
         $paymentForm = $request->input('payment');

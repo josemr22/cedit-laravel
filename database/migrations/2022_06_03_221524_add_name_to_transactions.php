@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class AddNameToPayDetails extends Migration
+class AddNameToTransactions extends Migration
 {
     /**
      * Run the migrations.
@@ -13,9 +13,9 @@ class AddNameToPayDetails extends Migration
      */
     public function up()
     {
-        Schema::table('pay_details', function (Blueprint $table) {
+        Schema::table('transactions', function (Blueprint $table) {
             //
-            $table->string('name')->nullable();
+            $table->string('razon_social')->nullable();
             $table->string('address')->nullable();
             $table->string('email')->nullable();
             $table->string('doc_num')->nullable();
@@ -29,7 +29,7 @@ class AddNameToPayDetails extends Migration
      */
     public function down()
     {
-        Schema::table('pay_details', function (Blueprint $table) {
+        Schema::table('transactions', function (Blueprint $table) {
             //
         });
     }
