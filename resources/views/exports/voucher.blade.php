@@ -9,7 +9,7 @@
     <style>
         .header {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(2, 1fr);
         }
 
         .header-text {
@@ -37,7 +37,7 @@
 <body>
     <div class="header">
         <div>
-            LOGO
+            <img src="http://34.70.157.41/assets/img/cedit-logo.png" width="15%" />
         </div>
         <div class="header-text">
             <p>CORPORACION CEDIT E.I.R.L.</p>
@@ -108,10 +108,17 @@
     </div>
 
     <div class="footer">
+	<br>
+	<br>
+	<br>
+	<br>
+	<br>
         <p>AVISO IMPORTANTE</p>
-        <p>SI EL ALUMNO SE RETIRARÁ EN FORMA</p>
+        <p>SI EL ALUMNO SE RETIRARA EN FORMA</p>
         <p>VOLUNTARIA, LA INSTITUCIÓN NO SE HACE</p>
-        <p>RESPONSABLE DE CAMBIOS NI DEVOLUCIONES.</p>
+	<p>RESPONSABLE DE CAMBIOS NI DEVOLUCIONES.</p>
+	<br>
+	<br>
         <p>LA DIRECCIÓN</p>
     </div>
 </body>

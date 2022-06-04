@@ -301,6 +301,8 @@ class StudentController extends Controller
         //Create Transaction
         $transactionForm = $request->input("transaction");
 
+        $course_turn_student_id = $request->input('course_turn_student_id');
+
         $transaction = $this->createTransaction($transactionForm);
 
         //Payment
@@ -325,9 +327,12 @@ class StudentController extends Controller
         $payDetail = [];
         $type_label = SaleType::getList()[$type]['label'];
 
+        $course_turn_student = CourseTurnStudent::find($course_turn_student_id);
+        $course_name = $course_turn_student->courseTurn->course->name;
+
         array_push($payDetail, [
             'amount' => $amount,
-            'label' => "Pago de $type_label"
+            'label' => "Pago de $type_label del curso $course_name"
         ]);
 
         //createPayDetail
@@ -345,7 +350,7 @@ class StudentController extends Controller
         $sale->state = $request->input('state');
         $sale->payment_id = $payment->id;
         $sale->user_id = $transactionForm['user_id'];
-        $sale->course_turn_student_id = $request->input('course_turn_student_id');
+        $sale->course_turn_student_id = $course_turn_student_id;
         $sale->save();
 
         $student = $sale->course_turn_student->student;

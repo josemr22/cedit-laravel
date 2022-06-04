@@ -71,9 +71,9 @@ class TillController extends Controller
             $number_installment = $installment->number;
             $label = "Pago de mensualidad $number_installment del curso $courseName";
         } else {
-            // $courseName = $installment->payment->sale->course_turn_student->courseTurn->course->name;
+            $courseName = $installment->payment->sale->course_turn_student->courseTurn->course->name;
             $saleType = SaleType::getList()[$installment->type]['label'];
-            $label = "Pago de $saleType";
+            $label = "Pago de $saleType del curso $courseName";
         }
 
         array_push($payDetail, [
@@ -372,7 +372,6 @@ class TillController extends Controller
             'responsable' => $transaction->responsable->name,
             'total' => [
                 'amount' => $total,
-                // 'label' => 'SON: QUINCE Y 00/100 SOLES
                 'label' => "SON: $total_text SOLES",
             ]
         ];
