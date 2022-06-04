@@ -37,7 +37,7 @@
 <body>
     <div class="header">
         <div>
-            <!-- <img src="http://34.70.157.41/assets/img/cedit-logo.png" width="15%" /> -->
+            <img src="http://34.70.157.41/assets/img/cedit-logo.png" width="15%" />
         </div>
         <div class="header-text">
             <p>CORPORACION CEDIT E.I.R.L.</p>
