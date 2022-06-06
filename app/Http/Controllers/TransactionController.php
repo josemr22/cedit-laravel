@@ -146,4 +146,9 @@ class TransactionController extends Controller
 
         return response()->json($sunat_response);
     }
+
+    public function operationIsTaken(String $operation){
+        $transaction = Transaction::where('operation', $operation)->first();
+        return response()->json($transaction!=null);
+    }
 }

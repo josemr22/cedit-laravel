@@ -83,6 +83,7 @@ Route::get('/transactions/check-delete/{transaction}', [TransactionController::c
 Route::put('/transactions/{transaction}', [TransactionController::class, 'update']);
 Route::delete('/transactions/{transaction}', [TransactionController::class, 'delete']);
 Route::post('/transactions/sunat/send', [TransactionController::class, 'resendToSunat']);
+Route::get('/transactions/operation-is-taken/{transaction}', [TransactionController::class, 'operationIsTaken']);
 
 // Spendings
 Route::get('/spendings', [SpendingController::class, 'index']);
