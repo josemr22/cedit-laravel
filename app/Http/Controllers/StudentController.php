@@ -365,6 +365,7 @@ class StudentController extends Controller
         $sale->payment_id = $payment->id;
         $sale->user_id = $transactionForm['user_id'];
         $sale->course_turn_student_id = $course_turn_student_id;
+        $sale->extra = $request->input('extra') ?? null;
         $sale->save();
 
         $student = $sale->course_turn_student->student;
