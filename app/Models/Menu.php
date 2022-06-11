@@ -46,6 +46,10 @@ class Menu
             'services' => [
                 'label' => 'Servicios',
                 'route' => '/ventas/servicios',
+            ],
+            'control' => [
+                'label' => 'Control de Operación',
+                'route' => '/caja/control-operacion',
             ]
         ];
     }

@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use App\Models\Extra;
 
 class DatabaseSeeder extends Seeder
 {
@@ -26,5 +27,7 @@ class DatabaseSeeder extends Seeder
             SpendingSeeder::class,
             CorrelativeSeeder::class
         ]);
+
+        Extra::create([]);
     }
 }

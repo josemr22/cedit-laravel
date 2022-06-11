@@ -103,3 +103,5 @@ Route::get('/enrolled-years', [SharedController::class, 'getEnrolledYears']);
 Route::get('/banks', [SharedController::class, 'getBanks']);
 Route::get('/menu', [SharedController::class, 'getMenu']);
 Route::get('/get-dashboard-data', [SharedController::class, 'getDashboardData']);
+Route::post('/toggle-control', [SharedController::class, 'toggleControl']);
+Route::get('/get-control-status', [SharedController::class, 'getControlStatus']);

@@ -22,6 +22,13 @@ class UserSeeder extends Seeder
         ]);
 
         $user->assignRole('Administrador');
+        
+        $dueno = User::factory()->create([
+            'name' => 'Dueño',
+            'user' => 'Dueno',
+        ]);
+
+        $dueno->assignRole('Dueño');
 
         for ($i = 0; $i < 4; $i++) {
             $u = User::factory()->create();

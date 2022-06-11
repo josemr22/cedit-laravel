@@ -43,6 +43,7 @@ class RoleSeeder extends Seeder
         $p8 = Permission::create(['name' => 'uniforms']);
         $p9 = Permission::create(['name' => 'certificates']);
         $p10 = Permission::create(['name' => 'services']);
+        $p11 = Permission::create(['name' => 'control']);
 
         $administrador->syncPermissions([
             $p1,
@@ -54,6 +55,7 @@ class RoleSeeder extends Seeder
             $p7,
             $p8,
             $p9,
+            $p10,
         ]);
         $ventas->syncPermissions([
             $p3,
@@ -87,6 +89,7 @@ class RoleSeeder extends Seeder
             $p8,
             $p9,
             $p10,
+            $p11,
         ]);
     }
 }

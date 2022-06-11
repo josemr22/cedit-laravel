@@ -9,6 +9,7 @@ use App\Models\Department;
 use App\Models\CourseTurnStudent;
 use App\Models\Payment;
 use App\Models\Transaction;
+use App\Models\Extra;
 
 class SharedController extends Controller
 {
@@ -63,5 +64,17 @@ class SharedController extends Controller
         ];
 
         return response()->json($resp);
+    }
+
+    public function toggleControl(){
+        $extra = Extra::first();
+        $extra->control = !$extra->control;
+        $extra->save();
+        return response()->json($extra->control);
+    }
+
+    public function getControlStatus(){
+        $extra = Extra::first();
+        return response()->json($extra->control);
     }
 }
